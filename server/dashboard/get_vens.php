@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $res = $query->fetchAll(PDO::FETCH_OBJ);
         
 
-        $sql = "SELECT v.id, v.ven_date, v.ven_time, v.user_id, v.u_role, v.DN, v.price, v.color, v.ven_com_name, v.status, v.comment, p.fname, p.`name`, p.sname
+        $sql = "SELECT v.id, v.ven_date, v.ven_time, v.user_id as profile_id, v.u_role, v.DN, v.price, v.color, v.ven_com_name, v.status, v.comment, p.fname, p.`name`, p.sname, p.user_id
                 FROM ven AS v
                 INNER JOIN `profile` AS p ON v.user_id = p.id
                 WHERE v.status = 1 OR v.status = 2
@@ -50,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
                         'u_name' => $rs->fname.$rs->name.' '.$rs->sname,
                         'u_role' => $rs->u_role,
                         'ven_com_name' => $rs->ven_com_name,
-                        'DN' => $rs->DN
+                        'DN' => $rs->DN,
+                        'user_id' => $rs->user_id
                     )
                 ));
             }

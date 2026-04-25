@@ -9,12 +9,17 @@ createApp({
             search: '',
             filter_month: new Date().getMonth() + 1,
             filter_year: new Date().getFullYear(),
+            filterMyDuty: false,
+            ssid: '',
             selected_types: [],
             months: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
             years: []
         }
     },
     computed: {
+        currentUserId() {
+            return this.ssid;
+        },
         dutyStats() {
             if (!this.dutyTypes || !Array.isArray(this.dutyTypes)) return [];
             const stats = {};
@@ -79,6 +84,13 @@ createApp({
                 });
             }
 
+            // My Duty filter
+            if (this.filterMyDuty && this.ssid) {
+                filtered = filtered.filter(ev => {
+                    return String(ev.extendedProps.user_id) === String(this.ssid);
+                });
+            }
+
             return filtered;
         },
         groupedEvents() {
@@ -132,6 +144,9 @@ createApp({
                     if (response.data.status) {
                         this.datas = response.data.respJSON;
                         this.dutyTypes = response.data.res || [];
+                        this.ssid = response.data.ssid || '';
+                        console.log("Datas fetched:", this.datas.length);
+                        console.log("SSID from API:", this.ssid);
                         
                         // Initialize selected_types with all found types
                         if (this.selected_types.length === 0) {
@@ -158,6 +173,12 @@ createApp({
             } else {
                 this.selected_types.push(key);
             }
+        }
+    },
+    watch: {
+        filterMyDuty(newVal) {
+            console.log("filterMyDuty changed:", newVal);
+            console.log("Filtered result count:", this.filteredEvents.length);
         }
     }
 }).mount('#list-view')

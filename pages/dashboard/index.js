@@ -65,6 +65,7 @@ Vue.createApp({
     selected_types: [], // Store keys like "name|u_role"
     calendar: null,
     isLoading : false,
+    filterMyDuty: false,
     search_query: '',
   }
   },
@@ -139,6 +140,14 @@ Vue.createApp({
                 return titleMatch || uNameMatch || uRoleMatch || venComMatch || dnMatch;
             });
         }
+
+        // Filter by My Duty
+        if (this.filterMyDuty && this.ssid) {
+            filtered = filtered.filter(event => {
+                const ep = event.extendedProps || {};
+                return String(ep.user_id) === String(this.ssid);
+            });
+        }
         
         return filtered;
     }
@@ -166,6 +175,9 @@ Vue.createApp({
             }
         },
         deep: true
+    },
+    filterMyDuty(newVal) {
+        this.cal_render();
     }
   },
   methods: {

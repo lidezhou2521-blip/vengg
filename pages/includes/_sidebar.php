@@ -53,22 +53,40 @@
                             </a>
                         </li>                        
                         <li class="submenu-item <?php echo isActiveFile('ven_set') ?>">
-                            <a href="../asu/ven_set.php" target="_blank">จัดเวร</a>
+                            <a href="../asu/ven_set.php" target="_blank">
+                                <i class="bi bi-calendar-plus"></i>
+                                <span>จัดเวร</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('ven_quick') ?>">
-                            <a href="../asu/ven_quick.php">⚡ จัดเวรอย่างรวดเร็ว</a>
+                            <a href="../asu/ven_quick.php">
+                                <i class="bi bi-lightning-fill"></i>
+                                <span>จัดเวรอย่างรวดเร็ว</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('ven_com') ?>">
-                            <a href="../asu/ven_com.php">เพิ่มคำสั่ง</a>
+                            <a href="../asu/ven_com.php">
+                                <i class="bi bi-file-earmark-plus"></i>
+                                <span>เพิ่มคำสั่ง</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('ven_user') ?>">
-                            <a href="../asu/ven_user.php">เตรียม-ผู้อยู่เวร</a>
+                            <a href="../asu/ven_user.php">
+                                <i class="bi bi-person-lines-fill"></i>
+                                <span>เตรียม-ผู้อยู่เวร</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('work_name') ?>">
-                            <a href="../asu/work_name.php">เตรียม-เวร/กลุ่มหน้าที่</a>
+                            <a href="../asu/work_name.php">
+                                <i class="bi bi-briefcase"></i>
+                                <span>เตรียม-เวร/กลุ่มหน้าที่</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('holiday') ?>">
-                            <a href="../asu/holiday.php">📅 วันหยุดราชการ</a>
+                            <a href="../asu/holiday.php">
+                                <i class="bi bi-calendar-date"></i>
+                                <span>วันหยุดราชการ</span>
+                            </a>
                         </li>
                         
                     </ul>
@@ -82,30 +100,48 @@
                 
                 <li class="sidebar-item  has-sub <?php echo isActive('users') ?>">
                     <a href="#" class='sidebar-link'>
-                        <i class="bi bi-stack"></i>
+                        <i class="bi bi-shield-lock"></i>
                         <span>admin</span>
                     </a>
                     <ul class="submenu <?php echo isActive('users') ?>">
                         <?php if($_SESSION['LOGIN_BY'] == 'gdms'){ ?>
                             <li class="submenu-item <?php echo isActive('users') ?>">
-                                <a href="../users/index_gdms.php">จัดการสมาชิก</a>
+                                <a href="../users/index_gdms.php">
+                                    <i class="bi bi-people"></i>
+                                    <span>จัดการสมาชิก</span>
+                                </a>
                             </li>
                         <?php }else{ ?>
                             <li class="submenu-item <?php echo isActive('users') ?>">
-                            <a href="../users/">จัดการสมาชิก</a>
-                        </li>
+                                <a href="../users/">
+                                    <i class="bi bi-people"></i>
+                                    <span>จัดการสมาชิก</span>
+                                </a>
+                            </li>
                         <?php } ?>
                         <li class="submenu-item <?php echo isActiveFile('line') ?>">
-                            <a href="../users/line.php">ตั่งค่า Line</a>
+                            <a href="../users/line.php">
+                                <i class="bi bi-line text-success"></i>
+                                <span>ตั่งค่า Line</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('fname') ?>">
-                            <a href="../users/fname.php">คำนำหน้าชื่อ</a>
+                            <a href="../users/fname.php">
+                                <i class="bi bi-person-badge"></i>
+                                <span>คำนำหน้าชื่อ</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('dep') ?>">
-                            <a href="../users/dep.php">ตำแหน่ง</a>
+                            <a href="../users/dep.php">
+                                <i class="bi bi-person-vcard"></i>
+                                <span>ตำแหน่ง</span>
+                            </a>
                         </li>
                         <li class="submenu-item <?php echo isActiveFile('group') ?>">
-                            <a href="../users/group.php">กลุ่มงาน</a>
+                            <a href="../users/group.php">
+                                <i class="bi bi-diagram-3"></i>
+                                <span>กลุ่มงาน</span>
+                            </a>
                         </li>
                         
                         

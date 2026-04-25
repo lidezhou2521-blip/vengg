@@ -99,6 +99,59 @@ require_once('../../server/authen.php');
                         
 
 
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center g-3">
+                                            <!-- Search Box -->
+                                            <div class="col-md-9 search-box">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
+                                                    <input type="text" v-model="search_query" class="form-control border-start-0" placeholder="ค้นหาชื่อ, ตำแหน่ง, ประเภทเวร...">
+                                                </div>
+                                            </div>
+                                            <!-- My Duty Toggle -->
+                                            <div class="col-md-3">
+                                                <button @click="filterMyDuty = !filterMyDuty" 
+                                                        class="btn w-100" 
+                                                        :class="filterMyDuty ? 'btn-primary' : 'btn-outline-primary'">
+                                                    <i class="bi" :class="filterMyDuty ? 'bi-person-check-fill' : 'bi-person'"></i>
+                                                    เวรของฉัน
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Duty Types Legend -->
+                                        <div class="mt-4" v-if="dutyStats.length > 0">
+                                            <h6 class="mb-3 text-muted small"><i class="bi bi-tag-fill me-2"></i>เลือกแสดงตามชื่อเวร:</h6>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div v-for="type in dutyStats" :key="type.key" 
+                                                     @click="toggleType(type.key)"
+                                                     class="px-3 py-2 rounded-3 border d-flex align-items-center shadow-sm cursor-pointer"
+                                                     :style="{ 
+                                                         borderLeft: '5px solid ' + type.color, 
+                                                         backgroundColor: type.active ? '#f8fafc' : '#ffffff',
+                                                         opacity: type.active ? 1 : 0.4,
+                                                         filter: type.active ? 'none' : 'grayscale(0.5)',
+                                                         cursor: 'pointer',
+                                                         transition: 'all 0.2s'
+                                                     }">
+                                                    <div class="me-3">
+                                                        <div class="fw-bold small">{{ type.name }}</div>
+                                                    </div>
+                                                    <div class="ms-auto d-flex align-items-center">
+                                                        <div class="fw-bold me-2" :class="type.active ? 'text-primary' : 'text-muted'">{{ type.count }}</div>
+                                                        <i class="bi" :class="type.active ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-12 ">
                                 <div class="card shadow-lg border-0">
@@ -310,7 +363,7 @@ require_once('../../server/authen.php');
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
     <script src="../../node_modules/axios/dist/axios.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
-    <script src="./index.js"></script>
+    <script src="./index.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
 

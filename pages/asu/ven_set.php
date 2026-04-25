@@ -20,19 +20,8 @@ require_once('../../server/authen.php');
 
   </style>
 
-<!-- <link href='./dist/css/index.css' rel='stylesheet' />
-
-
-<link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="./node_modules/sweetalert2/dist/sweetalert2.min.css">
-<link rel="stylesheet" href="./dist/css/app.css">
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300&display=swap" rel="stylesheet"> -->
 <?php require_once('../includes/_header.php') ?>
 
-<!-- <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script> -->
-<!-- <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script> -->
-<!-- <script src='./dist/js/demo-to-codepen.js'></script> -->
 <link rel="stylesheet" href="../../assets/fullcalendar/main.min.css">
 <script src="../../assets/fullcalendar/main.min.js"></script>
 
@@ -42,7 +31,7 @@ require_once('../../server/authen.php');
     var Calendar = FullCalendar.Calendar;
     var Draggable = FullCalendar.Draggable;
 
-    var containerEl = document.getElementById('external-events');
+    var containerEl = document.getElementById('external-events-list');
     var calendarEl = document.getElementById('calendar');
     var checkbox = document.getElementById('drop-remove');
 
@@ -59,76 +48,129 @@ require_once('../../server/authen.php');
       }
     });
 
-    // initialize the calendar
-    // -----------------------------------------------------------------
-
 });
 
 </script>
 <style>
-
   html, body {
     margin: 0;
     padding: 0;
     font-family: 'Prompt', sans-serif;
-    /* font-family: Arial, Helvetica Neue, Helvetica, sans-serif; */
-    font-size: 15px;
+    background-color: #f8fafc;
+    font-size: 14px;
   }
 
   #external-events {
     position: fixed;
-    /* position: relative; */
-    z-index: 2;
-    top: 10px;
-    left: 15px;
-    width: 175px;
-    height: 100%;
-    padding: 0 10px;
-    border: 1px solid rgb(236, 40, 40);
-    background: rgb(144, 212, 18);
+    z-index: 10;
+    top: 0;
+    left: 0;
+    width: 240px;
+    height: 100vh;
+    padding: 25px 15px;
+    background: #ffffff;
+    border-right: 1px solid #edf2f7;
+    box-shadow: 5px 0 25px rgba(0,0,0,0.03);
     overflow-y: auto;
-    /* overflow-y: scroll; */
   }
 
-  #external-events2 {
-    position: fixed;
-    font-size: 18px;
-    z-index: 2;
-    top: 10px;
-    left: 220px;
-    width: 800px;
-    padding: 0 10px;
-    border: 1px solid rgb(236, 40, 40);
-    background: rgb(178, 206, 233);
+  #external-events h5 {
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
   }
 
-  .demo-topbar + #external-events { /* will get stripped out */
-    top: 60px;
+  #external-events select {
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    font-size: 0.9rem;
+    background-color: #f8fafc;
+    color: #2d3748;
+    transition: all 0.2s;
+  }
+
+  #external-events select:focus {
+    border-color: #435ebe;
+    box-shadow: 0 0 0 3px rgba(67, 94, 190, 0.1);
+    outline: none;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a0aec0;
+    font-weight: 700;
+    margin: 15px 0 8px 5px;
+  }
+
+  #external-events .fc-event,
+  #external-events .fc-event-main {
+    color: #2d3748 !important;
   }
 
   #external-events .fc-event {
     cursor: move;
-    margin: 3px 0;
+    margin: 8px 0 !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04) !important;
+    border-left: 4px solid #435ebe !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+  }
+
+  #external-events .fc-event:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    background: #f1f5f9 !important;
+  }
+
+  #external-events2 {
+    position: fixed;
+    z-index: 5;
+    top: 0;
+    left: 240px;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    font-weight: 600;
+    color: #4a5568;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
   }
 
   #calendar-container {
     position: relative;
     z-index: 1;
-    margin-left: 200px;
-    margin-top: 50px;
-    width:auto;
+    margin-left: 240px;
+    padding: 80px 30px 30px 30px;
+    transition: all 0.3s ease;
   }
   
-  #vc {
-    position: relative;
-    z-index: 3;
-    margin-left: 200px;
-  }
   #calendar {
-    max-width: 1100px;
-    margin: 20px auto;
-    height: auto;
+    max-width: 100%;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
   }
+
+  /* Custom Scrollbar for Sidebar */
+  #external-events::-webkit-scrollbar { width: 4px; }
+  #external-events::-webkit-scrollbar-track { background: transparent; }
+  #external-events::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -138,55 +180,106 @@ require_once('../../server/authen.php');
     <div class="spinner-border float-end" role="status" aria-hidden="true"></div>
   </div>
   
-  <div id='external-events2'>
-  {{ven_month}} | 
-  <!-- {{ven_com}}  -->
-  {{ven_com.ven_com_num}} {{ven_com.name}} {{ven_com.id}} |
-  {{ven_name_sub.name}} {{ven_name_sub.vn_id}} : {{ven_name_sub.name}} {{ven_name_sub.vns_id}}
-  <!-- {{ven_name_sub}}  -->
+  <div id='external-events2' :style="{ left: show_sidebar ? '240px' : '0' }">
+    <button @click="show_sidebar = !show_sidebar" class="btn btn-sm btn-outline-primary me-3">
+        <i class="bi" :class="show_sidebar ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
+    </button>
+    <i class="bi bi-calendar-event me-2 text-primary"></i>
+    <span class="me-3">{{ven_month}}</span>
+    <span class="badge bg-light text-primary border me-3">คำสั่งที่ {{ven_com.ven_com_num}}</span>
+    <span class="text-muted small">{{ven_com.name}}</span>
+    <span class="ms-auto badge bg-primary rounded-pill px-3">{{ven_name_sub.name}}</span>
   </div>
-  <div id='external-events'>
-    <form >
-      <!-- เลือกเดือน -->
-      <select class="form-select mt-1 co-10" id="u_role" v-model="ven_month" placeholder="เดือน" @change="ch_sel_ven_month()">
-          <option v-for="svm in months" :value="svm.ven_month" >{{svm.name}} </option>        
-      </select>
 
-      <!-- เลือกคำสั่งเวร -->
-      <select class="form-select mt-1 co-10" id="select_vc" v-model="vc_index" placeholder="เลือกคำสั่งเวร" @change="ch_sel_ven_name(vc_index)">
-                
-          <option v-for="vc,vci in ven_coms" :value="vci" >{{vc.ven_com_num}} {{vc.name}} </option>        
-      </select>
-
-      <!-- เลือกตำแหน่ง/หน้าที่ -->
-      <select class="form-select mt-1 co-10" id="vns" v-model="vns_index" placeholder="เลือกตำแหน่ง" @change="ch_sel_vns(vns_index)">
-         
-        <option v-for="vns,vnsi in ven_name_subs" :value="vnsi" > {{vns.name}} </option>        
-      </select>
-
-      <!-- <select class="form-select mt-1 co-10" id="u_role" v-model="ven_coms_index" placeholder="กรุณาเลือกคำสั่ง / หน้าที่" @change="sel_vem_com(ven_coms_index)">
-        <option v-for="vc,index in ven_coms" :value="index" >{{vc.u_role}} -> {{vc.DN}} -> {{vc.ven_com_name}} -> {{vc.ven_com_num}} ->  {{vc.price}} </option>        
-      </select> -->
-
-    </form>
-    <p>
-      <strong>{{ven_month}} </strong><br>
-      
-    </p>
+  <div id='external-events' v-show="show_sidebar">
+    <h5><i class="bi bi-person-plus-fill me-2 text-primary"></i> จัดการเวร</h5>
     
-    <div class='fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event' v-for="pf,index in profiles" :data-event="pf.data_event" :data-uid="pf.uid">
-      <div class='fc-event-main'>{{index + 1}} {{pf.u_name}}</div>
-    </div>    
-       <!-- {{profiles}} -->
+    <form>
+      <div class="sidebar-section-title">1. เลือกเดือน</div>
+      <select class="form-select" v-model="ven_month" @change="ch_sel_ven_month()">
+          <option v-for="svm in months" :value="svm.ven_month">{{svm.name}}</option>        
+      </select>
 
+      <div class="sidebar-section-title">2. เลือกคำสั่งเวร</div>
+      <select class="form-select" v-model="vc_index" @change="ch_sel_ven_name(vc_index)">
+          <option v-for="(vc,vci) in ven_coms" :value="vci">{{vc.ven_com_num}} {{vc.name}}</option>        
+      </select>
+
+      <div class="sidebar-section-title">3. เลือกตำแหน่ง/หน้าที่</div>
+      <select class="form-select" v-model="vns_index" @change="ch_sel_vns(vns_index)">
+          <option v-for="(vns,vnsi) in ven_name_subs" :value="vnsi">{{vns.name}}</option>        
+      </select>
+    </form>
+
+    <div class="sidebar-section-title mt-4 d-flex justify-content-between align-items-center">
+        <span>รายชื่อเจ้าหน้าที่ ({{profiles_filtered.length}})</span>
+    </div>
+    
+    <div class="mt-2 mb-3">
+        <div class="input-group input-group-sm">
+            <span class="input-group-text bg-white border-end-0"><i class="bi bi-filter text-muted"></i></span>
+            <input type="text" v-model="qp" class="form-control border-start-0 ps-0" placeholder="กรองชื่อในรายการ...">
+        </div>
+    </div>
+    
+    <div id="external-events-list">
+        <div class='fc-event fc-h-event fc-daygrid-event fc-daygrid-block-event shadow-sm' 
+             v-for="pf in profiles_filtered" 
+             :key="pf.uid"
+             :data-event="JSON.stringify(pf.data_event)" 
+             :data-uid="pf.uid">
+          <div class='fc-event-main'>
+            <i class="bi bi-grip-vertical me-1 opacity-50"></i>
+            {{pf.u_name}}
+          </div>
+        </div>
+    </div>
+    
+    <div v-if="profiles_filtered.length === 0" class="text-center py-5 text-muted small opacity-50">
+      <i class="bi bi-person-dash fs-2 d-block mb-2"></i>
+      ไม่พบข้อมูลเจ้าหน้าที่
+    </div>
   </div>
   
-  <div id='calendar-container'>
+  <div id='calendar-container' :style="{ marginLeft: show_sidebar ? '240px' : '0' }">
+     <!-- Search and Legend -->
+     <div class="card mb-3 shadow-sm border-0">
+         <div class="card-body">
+             <div class="row g-3 align-items-center">
+                 <div class="col-md-12">
+                     <div class="input-group">
+                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
+                         <input type="text" v-model="search_query" class="form-control border-start-0" placeholder="ค้นหาชื่อ, ตำแหน่ง, ประเภทเวรในปฏิทิน...">
+                     </div>
+                 </div>
+             </div>
+
+             <!-- Duty Types Legend -->
+             <div class="mt-3" v-if="dutyStats.length > 0">
+                 <div class="d-flex flex-wrap gap-2">
+                     <div v-for="type in dutyStats" :key="type.key" 
+                          @click="toggleType(type.key)"
+                          class="px-3 py-1 rounded-pill border d-flex align-items-center shadow-sm cursor-pointer"
+                          :style="{ 
+                              borderLeft: '4px solid ' + type.color, 
+                              backgroundColor: type.active ? '#f8fafc' : '#ffffff',
+                              opacity: type.active ? 1 : 0.4,
+                              filter: type.active ? 'none' : 'grayscale(0.5)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              fontSize: '0.85rem'
+                          }">
+                         <div class="fw-bold me-2">{{ type.name }}</div>
+                         <div class="badge bg-light text-dark border">{{ type.count }}</div>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+
      <div id='calendar' ref="calendar"></div>
      
   </div>
-  <!-- {{datas}} -->
-  <!-- {{profiles}} -->
 
   <!-- Button trigger modal -->
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ref="show_modal" hidden>
@@ -203,12 +296,6 @@ require_once('../../server/authen.php');
         <div class="modal-body">
           <div>
             <table class="table table-bordered">
-              <!-- <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col"></th>
-                </tr>
-              </thead> -->
               <tbody>
                 <tr>
                   <th scope="row">id</th>
@@ -228,11 +315,9 @@ require_once('../../server/authen.php');
                 <tr>
                   <th scope="row">เบิกเงินในคำสั่ง</th>
                   <td>
-                    <!-- {{data_event}} -->
                     <select class="form-select" aria-label="Default select example" v-model="data_event.ven_com_idb" v-if="data_event_ven_coms" @change.prevent="ven_save2()">
                         <option v-for="vc in data_event_ven_coms" :value="vc.vc_id" >{{' คำสั่งที่ ' + vc.ven_com_num + ' เวร ' +vc.name}}</option>
                     </select>
-                    <!-- {{data_event_ven_coms}} -->
                   </td>
                 </tr>
                 <tr>
@@ -255,8 +340,6 @@ require_once('../../server/authen.php');
                 
               </tbody>
             </table>
-            <!-- {{ven_coms}} -->
-            <!-- {{data_event}} -->
           </div>
           <div class="row">
             <div>
@@ -264,17 +347,9 @@ require_once('../../server/authen.php');
                 {{isLoading ? 'Londing..': 'ลบ'}}
               </button>
             </div>
-            <div>
-              <!-- <button @click="ven_save()" class="btn btn-primary">save</button> -->
-            </div>
-            <!-- <div class="float-right"> -->
-              <!-- <button type="button" class="btn btn-success float-right" data-bs-dismiss="modal" aria-label="Close" ref="close_modal" @click="close_m()">ยกเลิก</button> -->
-            <!-- </div> -->
-
           </div>
         </div>
 
-      <!-- {{data_event}} -->
     </div>
   </div>
 </div>
@@ -287,10 +362,7 @@ require_once('../../server/authen.php');
     <script src="../../node_modules/vue/dist/vue.global.prod.js"></script>
     <script src="../../node_modules/axios/dist/axios.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
-    <script src="./js/ven_set.js"></script>
-    <!-- <script src="../plugins/toastr/toastr.min.js"></script> -->
-    <!-- <script src="./node_modules/fullcalendar/main.min.js"></script> -->
-
+    <script src="./js/ven_set.js?v=<?php echo time(); ?>"></script>
     
 </body>
 </html>

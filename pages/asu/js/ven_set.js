@@ -41,6 +41,8 @@ Vue.createApp({
       ven_month: '',
 
       profiles: [],
+      profiles_filtered: [],
+      qp: '',
       ven_name_subs: [],
       ven_coms: [],
       vc_index: '',
@@ -56,6 +58,61 @@ Vue.createApp({
 
       label_message: '<--กรุณาเลือกคำสั่ง',
       isLoading: false,
+      show_sidebar: true,
+      
+      duty_types: [],
+      selected_types: [],
+      search_query: '',
+    }
+  },
+  computed: {
+    dutyStats() {
+      try {
+        if (!this.duty_types || !Array.isArray(this.duty_types)) return [];
+        const stats = {};
+        this.duty_types.forEach(type => {
+          if (type && type.name && type.u_role) {
+            const key = type.name + '|' + type.u_role;
+            stats[key] = {
+              key: key,
+              name: type.name,
+              u_role: type.u_role,
+              color: type.color || '#cccccc',
+              count: 0,
+              active: this.selected_types.includes(key)
+            };
+          }
+        });
+        if (this.datas && Array.isArray(this.datas)) {
+          this.datas.forEach(event => {
+            const type = this.duty_types.find(t => t.color === event.backgroundColor);
+            if (type) {
+              const key = type.name + '|' + type.u_role;
+              if (stats[key]) stats[key].count++;
+            }
+          });
+        }
+        return Object.values(stats).filter(s => s.count > 0);
+      } catch (e) { return []; }
+    },
+    filteredEvents() {
+      let filtered = this.datas;
+      if (this.selected_types.length > 0) {
+        filtered = filtered.filter(ev => {
+          const type = this.duty_types.find(t => t.color === ev.backgroundColor);
+          if (!type) return true;
+          const key = type.name + '|' + type.u_role;
+          return this.selected_types.includes(key);
+        });
+      }
+      if (this.search_query && this.search_query.trim() !== '') {
+        const query = this.search_query.toLowerCase();
+        filtered = filtered.filter(ev => {
+          return (ev.title && ev.title.toLowerCase().includes(query)) ||
+                 (ev.u_role && ev.u_role.toLowerCase().includes(query));
+        });
+      }
+      return filtered;
     }
   },
   mounted() {
@@ -71,9 +128,36 @@ Vue.createApp({
   watch: {
     q() {
       this.ch_search_pro()
+    },
+    qp(val) {
+      if (val.trim() === '') {
+        this.profiles_filtered = this.profiles;
+      } else {
+        const query = val.toLowerCase();
+        this.profiles_filtered = this.profiles.filter(p => p.u_name.toLowerCase().includes(query));
+      }
+    },
+    filteredEvents: {
+      handler() {
+        this.cal_render();
+      },
+      deep: true
+    },
+    show_sidebar() {
+      this.$nextTick(() => {
+        this.cal_render();
+      });
     }
   },
   methods: {
+    toggleType(key) {
+      const index = this.selected_types.indexOf(key);
+      if (index > -1) {
+        this.selected_types.splice(index, 1);
+      } else {
+        this.selected_types.push(key);
+      }
+    },
     // get_ven_names(){
     //   axios.post('../../server/asu/ven_set/get_ven_names.php')
     //     .then(response => {
@@ -150,10 +234,12 @@ Vue.createApp({
         .then(response => {
           if (response.data.status) {
             this.profiles = response.data.respJSON
+            this.profiles_filtered = this.profiles
           } else {
             this.vns_index = ''
             this.ven_name_sub = ''
             this.profiles = []
+            this.profiles_filtered = []
             this.alert('warning', response.data.message, 0)
 
           }
@@ -171,7 +257,7 @@ Vue.createApp({
         firstDay: 1,
         height: 1200,
         locale: 'th',
-        events: this.datas,
+        events: this.filteredEvents,
         eventClick: (info) => {
           // console.log(info.event.id +' '+info.event.title)
           // console.log(info.event.extendedProps)
@@ -336,6 +422,17 @@ Vue.createApp({
         .then(response => {
           if (response.data.status) {
             this.datas = response.data.respJSON;
+            this.duty_types = response.data.res || [];
+            
+            if (this.selected_types.length === 0) {
+              this.duty_types.forEach(type => {
+                const key = type.name + '|' + type.u_role;
+                if (!this.selected_types.includes(key)) {
+                  this.selected_types.push(key);
+                }
+              });
+            }
+
             this.cal_render()
             this.$refs['calendar'].focus()
           }

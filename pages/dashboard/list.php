@@ -75,17 +75,25 @@ require_once('../../server/authen.php');
                                         <input type="text" v-model="search" class="form-control border-start-0" placeholder="ค้นหาชื่อ, กลุ่มหน้าที่...">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select v-model="filter_month" class="form-select">
                                         <option value="">ทุกเดือน</option>
                                         <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <select v-model="filter_year" class="form-select">
                                         <option value="">ทุกปี</option>
                                         <option v-for="y in years" :key="y" :value="y">{{ y + 543 }}</option>
                                     </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button @click="filterMyDuty = !filterMyDuty" 
+                                            class="btn w-100" 
+                                            :class="filterMyDuty ? 'btn-primary' : 'btn-outline-primary'">
+                                        <i class="bi" :class="filterMyDuty ? 'bi-person-check-fill' : 'bi-person'"></i>
+                                        เวรของฉัน
+                                    </button>
                                 </div>
                             </div>
                             
@@ -147,9 +155,12 @@ require_once('../../server/authen.php');
                                                     <div class="text-end">
                                                         <span class="badge" :class="event.extendedProps.DN == 'กลางคืน' ? 'bg-dark' : 'bg-warning text-dark'">
                                                             {{ event.extendedProps.DN == 'กลางคืน' ? '🌙 กลางคืน' : '☀️ กลางวัน' }}
-                                                        </span>
-                                                        <div class="small text-muted mt-1">{{ event.extendedProps.ven_time }}</div>
-                                                    </div>
+                                                         </span>
+                                                         <div v-if="event.extendedProps.user_id == currentUserId" class="mt-1">
+                                                             <span class="badge bg-info text-dark small"><i class="bi bi-person-fill me-1"></i>เวรของฉัน</span>
+                                                         </div>
+                                                         <div class="small text-muted mt-1">{{ event.extendedProps.ven_time }}</div>
+                                                     </div>
                                                 </div>
                                                 <div v-if="event.comment" class="bg-light p-2 rounded-2 mt-2">
                                                     <div class="small text-danger">
@@ -177,6 +188,6 @@ require_once('../../server/authen.php');
     <?php require_once('../includes/_footer_sc.php') ?>
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
     <script src="../../node_modules/axios/dist/axios.js"></script>
-    <script src="./list.js"></script>
+    <script src="./list.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

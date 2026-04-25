@@ -11,6 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $datas = array();
 
     try {
+        $sql = "SELECT vns.name as u_role, vns.price, vns.color, vn.name, vn.DN
+                FROM ven_name_sub AS vns
+                INNER JOIN ven_name AS vn ON vn.id = vns.ven_name_id";
+        $query = $conn->prepare($sql);
+        $query->execute();
+        $res = $query->fetchAll(PDO::FETCH_OBJ);
+
         $sql = "SELECT 
                     v.color, v.comment,
                     v.id, v.ven_date, v.ven_time, v.u_role, v.price, v.ven_com_name, 
@@ -36,12 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 ));
             }
             http_response_code(200);
-            echo json_encode(array('status' => true, 'message' => 'success', 'respJSON' => $datas));
+            echo json_encode(array('status' => true, 'message' => 'success', 'respJSON' => $datas, 'res' => $res));
             exit;
         }
 
         http_response_code(200);
-        echo json_encode(array('status' => true, 'message' => 'ไม่พบข้อมูล', 'respJSON' => $datas));
+        echo json_encode(array('status' => true, 'message' => 'ไม่พบข้อมูล', 'respJSON' => $datas, 'res' => $res));
         exit;
     } catch (PDOException $e) {
         http_response_code(400);
