@@ -15,10 +15,16 @@
             <ul class="menu">
                 <li class="sidebar-title">Menu</li>
 
-                <li class="sidebar-item <?php echo isActive('dashboard') ?>">
+                <li class="sidebar-item <?php echo isActiveFile('index') && isActive('dashboard') ? 'active' : '' ?>">
                     <a href="../dashboard/" class='sidebar-link'>
-                        <i class="bi bi-grid-fill"></i>
-                        <span>หน้าแรก</span>
+                        <i class="bi bi-calendar-event"></i>
+                        <span>ปฏิทินเวร</span>
+                    </a>
+                </li>
+                <li class="sidebar-item <?php echo isActiveFile('list') ?>">
+                    <a href="../dashboard/list.php" class='sidebar-link'>
+                        <i class="bi bi-list-ul"></i>
+                        <span>รายการเวร</span>
                     </a>
                 </li>
                 <li class="sidebar-item <?php echo isActive('history') ?>">

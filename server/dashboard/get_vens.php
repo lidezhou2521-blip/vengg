@@ -45,7 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
                     'allDay' => true,
                     'backgroundColor' => $bgcolor,
                     'textColor' => $textC,
-                    'comment' => $rs->comment ? $rs->comment : ''
+                    'comment' => $rs->comment ? $rs->comment : '',
+                    'extendedProps' => array(
+                        'u_name' => $rs->fname.$rs->name.' '.$rs->sname,
+                        'u_role' => $rs->u_role,
+                        'ven_com_name' => $rs->ven_com_name,
+                        'DN' => $rs->DN
+                    )
                 ));
             }
             

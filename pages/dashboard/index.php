@@ -32,6 +32,20 @@ require_once('../../server/authen.php');
         transform: translateY(-3px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+    .search-box .input-group {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid transparent !important;
+    }
+    .search-box .input-group:focus-within {
+        box-shadow: 0 0 0 0.25rem rgba(67, 94, 190, 0.25);
+        border-color: #435ebe !important;
+        background: #fff !important;
+    }
+    .search-box input:focus {
+        background: #fff !important;
+    }
 
    
 
@@ -50,8 +64,12 @@ require_once('../../server/authen.php');
             </header>
 
             <div class="page-heading">
-                <h3>หน้าแรก </h3>
-                <!-- {{ssid}} -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3>หน้าแรก </h3>
+                    <a href="./list.php" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list-ul me-1"></i> มุมมองแบบรายการ
+                    </a>
+                </div>
             </div> 
 
                 <!-- Content wrapper -->
@@ -79,41 +97,7 @@ require_once('../../server/authen.php');
                     <!-- {{ssid}} -->
                     <div class="container-xxl flex-grow-1 container-p-y" >                        
                         
-                        <!-- Duty Types Legend & Stats -->
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <div class="card shadow-sm border-0">
-                                    <div class="card-header bg-white pb-0 border-0">
-                                        <h5 class="card-title mb-0"><i class="bi bi-tag-fill text-primary me-2"></i>ประเภทเวร และสถิติเดือนนี้</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="d-flex flex-wrap gap-3" v-if="dutyStats && dutyStats.length > 0">
-                                            <div v-for="type in dutyStats" :key="type.key" 
-                                                 @click="toggleType(type.key)"
-                                                 class="duty-stat-card px-3 py-2 rounded-3 border d-flex align-items-center shadow-sm"
-                                                 :style="{ 
-                                                     borderLeft: '5px solid ' + type.color, 
-                                                     backgroundColor: type.active ? '#f8fafc' : '#ffffff',
-                                                     opacity: type.active ? 1 : 0.4,
-                                                     filter: type.active ? 'none' : 'grayscale(0.5)'
-                                                 }">
-                                                <div class="me-3">
-                                                    <div class="small text-muted">{{ type.name }}</div>
-                                                    <div class="fw-bold" :style="{ color: type.active ? 'inherit' : '#999' }">{{ type.u_role }}</div>
-                                                </div>
-                                                <div class="ms-auto d-flex align-items-center">
-                                                    <div class="h4 mb-0 me-2" :class="type.active ? 'text-primary' : 'text-muted'">{{ type.count }}</div>
-                                                    <i class="bi" :class="type.active ? 'bi-check-circle-fill text-success' : 'bi-circle text-muted'"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div v-else class="text-muted small">
-                                            ยังไม่มีข้อมูลเวรในขณะนี้
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div class="row">
                             <div class="col-12 ">

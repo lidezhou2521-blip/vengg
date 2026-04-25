@@ -65,6 +65,7 @@ Vue.createApp({
     selected_types: [], // Store keys like "name|u_role"
     calendar: null,
     isLoading : false,
+    search_query: '',
   }
   },
   computed: {
@@ -110,14 +111,36 @@ Vue.createApp({
     },
     filteredEvents() {
         if (!this.datas) return [];
-        if (this.selected_types.length === 0) return this.datas;
+        let filtered = this.datas;
+
+        // Filter by selected types
+        if (this.selected_types.length > 0) {
+            filtered = filtered.filter(event => {
+                const type = this.duty_types.find(t => t.color === event.backgroundColor);
+                if (!type) return true; // Keep if we don't know the type
+                const key = type.name + '|' + type.u_role;
+                return this.selected_types.includes(key);
+            });
+        }
+
+        // Filter by search query
+        if (this.search_query && this.search_query.trim() !== '') {
+            const query = this.search_query.toLowerCase();
+            filtered = filtered.filter(event => {
+                const titleMatch = event.title && event.title.toLowerCase().includes(query);
+                
+                // Check extendedProps
+                const ep = event.extendedProps || {};
+                const uNameMatch = ep.u_name && ep.u_name.toLowerCase().includes(query);
+                const uRoleMatch = ep.u_role && ep.u_role.toLowerCase().includes(query);
+                const venComMatch = ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(query);
+                const dnMatch = ep.DN && ep.DN.toLowerCase().includes(query);
+
+                return titleMatch || uNameMatch || uRoleMatch || venComMatch || dnMatch;
+            });
+        }
         
-        return this.datas.filter(event => {
-            const type = this.duty_types.find(t => t.color === event.backgroundColor);
-            if (!type) return true; // Keep if we don't know the type
-            const key = type.name + '|' + type.u_role;
-            return this.selected_types.includes(key);
-        });
+        return filtered;
     }
   },
   mounted(){
@@ -148,12 +171,14 @@ Vue.createApp({
   methods: {
     cal_render(){
       var calendarEl = this.$refs['calendar'];
+      let currentDate = this.ven_month;
       if (this.calendar) {
+        currentDate = this.calendar.getDate();
         this.calendar.destroy();
       }
       this.calendar = new FullCalendar.Calendar(calendarEl, {
         initialView : 'dayGridMonth',
-        initialDate : this.ven_month,
+        initialDate : currentDate,
         height      : 1240,
         locale      : 'th',
         firstDay    : 1,
@@ -398,7 +423,7 @@ Vue.createApp({
       })
 
     },
-   
+    
     alert(icon,message,timer=0){
       swal.fire({
         icon: icon,
