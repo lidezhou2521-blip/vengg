@@ -1,235 +1,277 @@
 Vue.createApp({
-  
   data() {
     return {
-      q:'2254',
-      datas : [],
-      ven_names :'',
-      ven_name_subs :'',
-      ven_users : [],
-      users : [],
-      judge : [],
-      not_judge : [],
-      vu_form   :{
-        user_id :'',
-        order   : 0,
-        vn_id   : 0,
-        vns_id  : 0,
+      datas: [],
+      users: [],
+      judge: [],
+      not_judge: [],
+      
+      // Drag & drop from sidebar
+      dragging_user: null,
+      drag_source: '', // 'sidebar' or 'reorder'
+      
+      // Reorder drag
+      reorder_group: null,
+      reorder_from_index: -1,
+      
+      // Filters
+      q_filter: '',
+      workgroup_filter: '',
+      
+      // Form (kept for compatibility)
+      vu_form: {
+        user_id: '',
+        order: 0,
+        vn_id: 0,
+        vns_id: 0,
       },
-      vu_form_act :'insert',
-      user      : '',
-      DN        : {
-        'กลางวัน' : '08:30',
-        'กลางคืน' : '16:30'
-      },
-      isLoading : false
+      vu_form_act: 'insert',
+      
+      show_sidebar: true,
+      isLoading: false
     }
   },
-  mounted(){
-    this.url_base = window.location.protocol + '//' + window.location.host;
-    this.url_base_app = window.location.protocol + '//' + window.location.host + '/adminphp/';
-    // const d = 
-    // this.get_ven_names()
-    this.get_ven_users()
-    this.get_users()
+  computed: {
+    workgroups() {
+      const set = new Set();
+      this.users.forEach(u => { if (u.workgroup) set.add(u.workgroup); });
+      return Array.from(set).sort();
+    },
+    filtered_users() {
+      let list = this.users;
+      if (this.workgroup_filter !== '') {
+        list = list.filter(u => u.workgroup === this.workgroup_filter);
+      }
+      if (this.q_filter.trim() !== '') {
+        const q = this.q_filter.toLowerCase();
+        list = list.filter(u =>
+          (u.name && u.name.toLowerCase().includes(q)) ||
+          (u.dep && u.dep.toLowerCase().includes(q)) ||
+          (u.workgroup && u.workgroup.toLowerCase().includes(q))
+        );
+      }
+      return list;
+    }
   },
-  watch: {
-    
+  mounted() {
+    this.get_ven_users();
+    this.get_users();
   },
   methods: {
-    // get_ven_names(){
-    //   this.isLoading = true
-    //   axios.post('../../server/asu/ven_user/get_ven_names.php')
-    //   .then(response => {
-    //       if (!response.data.status) {
-    //         this.alert('warning',response.data.message,timer=0)  
-    //       } 
-    //         this.ven_names = response.data.respJSON;
-    //   })
-    //   .catch(function (error) {
-    //       console.log(error);
-    //   })
-    //   .finally(() => {
-    //     this.isLoading = false;
-    //   })
-    // },
-    
-    get_ven_users(){
-      this.isLoading = true
-      axios.post('../../server/asu/ven_user/get_ven_users.php')
-      .then(response => {
-          if (response.data.status) {
-
-          } else{   
-            this.ven_users = []
-          }
-          this.datas  = response.data.respJSON;
-          // this.ven_users  = response.data.respJSON;
-      })
-      .catch(function (error) {
-          console.log(error);
-      })
-      .finally(() => {
-        this.isLoading = false;
-      })
-    },
-    get_users(){
-      axios.post('../../server/asu/ven_user/get_users.php')
-      .then(response => {
-          // if (response.data.status) {
-              this.users = response.data.respJSON;
-              this.judge = response.data.judge;
-              this.not_judge = response.data.not_judge;
-          // } 
-      })
-    },
-    
-    vu_add(index){
-      // this.get_ven_users()
-      // this.vu_form = this.datas[index]
-      this.vu_form.vn_id  = this.datas[index].vn_id
-      this.vu_form.vns_id = this.datas[index].vns_id
-      this.vu_form.order  = 0
-      this.vu_form.user_id = ''
-      this.vu_form_act    = 'insert'
-      this.$refs.show_vu_form.click()   
-    },
-    vu_add_user_all(vni,vnsi){
-
-      this.vu_form.ven_name  = this.ven_names[vni].name
-      this.vu_form.uvn    = this.ven_name_subs[vnsi].name
-      this.vu_form.DN     = this.ven_names[vni].DN
-      this.vu_form.v_time = this.DN[this.ven_names[vni].DN] +':'+this.ven_names[vni].srt + this.ven_name_subs[vnsi].srt
-      this.vu_form.price  = this.ven_name_subs[vnsi].price
-      this.vu_form.color  = this.ven_name_subs[vnsi].color
-
+    // === Data Loading ===
+    get_ven_users() {
       this.isLoading = true;
-
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "คุณต้องการเพิ่ม USER ทั้งหมดนะ!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, Is it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          axios.post('../../server/asu/ven_user_insert_all.php',{
-            ven_name  : this.ven_names[vni].name,
-            uvn    : this.ven_name_subs[vnsi].name,
-            DN     : this.ven_names[vni].DN,
-            v_time : this.DN[this.ven_names[vni].DN] +':'+this.ven_names[vni].srt + this.ven_name_subs[vnsi].srt,
-            price  : this.ven_name_subs[vnsi].price,
-            color  : this.ven_name_subs[vnsi].color,
-          })
-          .then(response => {
-              if (response.data.status) {            
-                this.alert('success',response.data.message,1000)
-                this.get_ven_users()                
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          })
-          .finally(() => {
-            this.isLoading = false;
-          })         
-        }
-        this.isLoading = false;
-      })
-    },
-
-    clear_vu_form(){
-      this.vu_form = {user_id :'', order   : 0, vn_id   : 0, vns_id  : 0,}
-      this.vu_form_act = 'insert'
-    },
-
-    vu_save(){
-      if(this.vu_form.user_id != ''){
-        this.isLoading = true;
-        axios.post('../../server/asu/ven_user/ven_user_act.php',{ven_user:this.vu_form, act:this.vu_form_act})
+      axios.post('../../server/asu/ven_user/get_ven_users.php')
         .then(response => {
-            if (response.data.status) {            
-              this.$refs.close_vu.click()
-              // this.get_ven_names()
-              // this.get_users()
-              this.get_ven_users()
-              this.alert('success',response.data.message,1000)
-            } else{
-              this.alert('warning',response.data.message,0)
-            }
+          if (response.data.status) {
+            this.datas = response.data.respJSON;
+          } else {
+            this.datas = [];
+          }
         })
-        .catch(function (error) {
-            console.log(error);
+        .catch(error => console.log(error))
+        .finally(() => { this.isLoading = false; });
+    },
+    get_users() {
+      axios.post('../../server/asu/ven_user/get_users.php')
+        .then(response => {
+          this.users = response.data.respJSON || [];
+          this.judge = response.data.judge || [];
+          this.not_judge = response.data.not_judge || [];
         })
-        .finally(() => {
-          this.isLoading = false;
-        })
-      }else{
-        const message = []
-        if(this.vu_form.user_id == ''){message.push('กรุณาเลือกชื่อ')}
-        if(this.vu_form.order   == ''){message.push('กรุณากรอกลำดับที่')}
-        this.alert('warning',message,0)
+        .catch(error => console.log(error));
+    },
+
+    // === Sidebar Drag (add new user) ===
+    onDragStart(event, user) {
+      this.dragging_user = user;
+      this.drag_source = 'sidebar';
+      event.target.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', user.uid);
+    },
+    onDragEnd(event) {
+      this.dragging_user = null;
+      this.drag_source = '';
+      event.target.classList.remove('dragging');
+    },
+
+    // === Reorder Drag (within group) ===
+    onMemberDragStart(event, dataIndex, memberIndex) {
+      this.drag_source = 'reorder';
+      this.reorder_group = dataIndex;
+      this.reorder_from_index = memberIndex;
+      event.target.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', memberIndex);
+    },
+    onMemberDragEnd(event) {
+      this.drag_source = '';
+      this.reorder_group = null;
+      this.reorder_from_index = -1;
+      event.target.classList.remove('dragging');
+    },
+    onMemberDragOver(event, dataIndex, memberIndex) {
+      event.preventDefault();
+      // Only allow reorder within the same group
+      if (this.drag_source === 'reorder' && this.reorder_group === dataIndex) {
+        event.dataTransfer.dropEffect = 'move';
+        event.currentTarget.classList.add('member-drag-over');
       }
     },
-    vu_up(id){
-      this.isLoading = true;
-        axios.post('../../server/asu/ven_user/get_ven_user.php',{id:id})
-        .then(response => {
-            if (response.data.status) {            
-              this.vu_form_act  = 'update'
-              this.vu_form      = response.data.respJSON;
-              this.$refs.show_vu_form.click()
-
-            }else{
-              this.alert('warning',response.data.message,1000)
-            } 
-        })
-        .catch(function (error) {
-            console.log(error);
-        })
-        .finally(() => {
-          this.isLoading = false;
-        })
+    onMemberDragLeave(event) {
+      event.currentTarget.classList.remove('member-drag-over');
     },
-    vu_del(id){
+    onMemberDrop(event, dataIndex, memberIndex) {
+      event.currentTarget.classList.remove('member-drag-over');
+      if (this.drag_source !== 'reorder' || this.reorder_group !== dataIndex) return;
+      
+      const fromIdx = this.reorder_from_index;
+      const toIdx = memberIndex;
+      if (fromIdx === toIdx) return;
+
+      const data = this.datas[dataIndex];
+      const users = [...data.users];
+      
+      // Move item
+      const [moved] = users.splice(fromIdx, 1);
+      users.splice(toIdx, 0, moved);
+      
+      // Update order numbers
+      const updates = users.map((u, i) => ({
+        vu_id: u.vu_id,
+        order: i + 1
+      }));
+
+      // Optimistic UI update
+      users.forEach((u, i) => { u.order = i + 1; });
+      data.users = users;
+
+      // Save to backend
+      axios.post('../../server/asu/ven_user/ven_user_act.php', {
+        act: 'reorder',
+        updates: updates
+      })
+        .then(response => {
+          if (response.data.status) {
+            this.alert('success', 'สลับลำดับเรียบร้อย', 800);
+          } else {
+            this.get_ven_users(); // rollback
+            this.alert('warning', response.data.message, 0);
+          }
+        })
+        .catch(error => {
+          console.log(error);
+          this.get_ven_users(); // rollback
+        });
+    },
+
+    // === Drop Zone (for sidebar items) ===
+    onDropZoneDragOver(event) {
+      event.preventDefault();
+      if (this.drag_source === 'sidebar') {
+        event.dataTransfer.dropEffect = 'copy';
+        event.currentTarget.classList.add('drag-over');
+      }
+    },
+    onDropZoneDragLeave(event) {
+      event.currentTarget.classList.remove('drag-over');
+    },
+    onDropZoneDrop(event, data) {
+      event.currentTarget.classList.remove('drag-over');
+      if (this.drag_source !== 'sidebar' || !this.dragging_user) return;
+
+      const user = this.dragging_user;
+      const nextOrder = (data.users ? data.users.length : 0) + 1;
+
+      this.isLoading = true;
+      axios.post('../../server/asu/ven_user/ven_user_act.php', {
+        ven_user: {
+          user_id: user.uid,
+          order: nextOrder,
+          vn_id: data.vn_id,
+          vns_id: data.vns_id
+        },
+        act: 'insert'
+      })
+        .then(response => {
+          if (response.data.status) {
+            this.get_ven_users();
+            this.alert('success', 'เพิ่ม ' + user.name + ' เรียบร้อย', 1000);
+          } else {
+            this.alert('warning', response.data.message, 0);
+          }
+        })
+        .catch(error => console.log(error))
+        .finally(() => { this.isLoading = false; });
+    },
+
+    // === CRUD Actions ===
+    vu_del(id) {
       Swal.fire({
-        title: 'Are you sure?',
-        text: "You won't be able to revert this!",
+        title: 'ลบผู้อยู่เวร?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ลบ',
+        cancelButtonText: 'ยกเลิก'
       }).then((result) => {
         if (result.isConfirmed) {
-          axios.post('../../server/asu/ven_user/ven_user_act.php',{id:id, act:'delete'})
+          axios.post('../../server/asu/ven_user/ven_user_act.php', { id: id, act: 'delete' })
             .then(response => {
-                if (response.data.status) { 
-                  this.get_ven_users()
-                  this.alert('success',response.data.message,1000)
-                }else{
-                  this.alert('warning',response.data.message,0)
-                } 
+              if (response.data.status) {
+                this.get_ven_users();
+                this.alert('success', response.data.message, 1000);
+              } else {
+                this.alert('warning', response.data.message, 0);
+              }
             })
-            .catch(function (error) {
-                console.log(error);
-            })
-            .finally(() => {
-              this.isLoading = false;
-            })
+            .catch(error => console.log(error));
         }
-      })
+      });
     },
-    alert(icon,message,timer=0){
+    vu_del_group(data) {
+      Swal.fire({
+        title: 'ลบผู้อยู่เวรในกลุ่มนี้?',
+        text: data.vn_name + ' - ' + data.vns_name + ' (' + (data.users ? data.users.length : 0) + ' คน)',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ลบทั้งกลุ่ม',
+        cancelButtonText: 'ยกเลิก'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.isLoading = true;
+          axios.post('../../server/asu/ven_user/ven_user_act.php', {
+            act: 'delete_group',
+            vn_id: data.vn_id,
+            vns_id: data.vns_id
+          })
+            .then(response => {
+              if (response.data.status) {
+                this.get_ven_users();
+                this.alert('success', response.data.message, 1500);
+              } else {
+                this.alert('warning', response.data.message, 0);
+              }
+            })
+            .catch(error => console.log(error))
+            .finally(() => { this.isLoading = false; });
+        }
+      });
+    },
+
+    // === Utility ===
+    alert(icon, message, timer = 0) {
       swal.fire({
+        position: 'top-end',
         icon: icon,
         title: message,
-        showConfirmButton: true,
+        showConfirmButton: false,
         timer: timer
       });
-    },    
+    }
   }
-
 }).mount('#venUser');

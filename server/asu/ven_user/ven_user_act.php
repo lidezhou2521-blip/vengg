@@ -89,6 +89,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(array('status' => false, 'message' => 'not work'));
             exit;               
         }  
+        if($act == 'delete_group'){
+            $vn_id = $data->vn_id;
+            $vns_id = $data->vns_id;
+            $sql = "DELETE FROM ven_user WHERE vn_id = :vn_id AND vns_id = :vns_id";
+            $q = $conn->prepare($sql);
+            $q->bindParam(':vn_id', $vn_id, PDO::PARAM_INT);
+            $q->bindParam(':vns_id', $vns_id, PDO::PARAM_INT);
+            $q->execute();
+            $count = $q->rowCount();
+            http_response_code(200);
+            echo json_encode(array('status' => true, 'message' => "ลบผู้อยู่เวร $count คนเรียบร้อย"));
+            exit;
+        }
+        if($act == 'insert_all'){
+            $ven_user = $data->ven_user;
+            $vn_id    = $ven_user->vn_id;
+            $vns_id   = $ven_user->vns_id;
+            $create_at = Date("Y-m-d H:i:s");
+
+            // Get all active users
+            $sql = "SELECT p.user_id, p.fname, p.name, p.sname, p.st 
+                    FROM profile AS p 
+                    INNER JOIN user AS u ON u.id = p.user_id 
+                    WHERE u.status = 10 
+                    ORDER BY p.st ASC";
+            $query = $conn->prepare($sql);
+            $query->execute();
+            $users = $query->fetchAll(PDO::FETCH_OBJ);
+
+            $count = 0;
+            foreach($users as $idx => $u){
+                // Check if already exists
+                $chk = $conn->prepare("SELECT vu_id FROM ven_user WHERE user_id = :uid AND vn_id = :vn_id AND vns_id = :vns_id");
+                $chk->bindParam(':uid', $u->user_id, PDO::PARAM_INT);
+                $chk->bindParam(':vn_id', $vn_id, PDO::PARAM_INT);
+                $chk->bindParam(':vns_id', $vns_id, PDO::PARAM_INT);
+                $chk->execute();
+                if($chk->rowCount() > 0) continue;
+
+                $order = $u->st > 0 ? $u->st : ($idx + 1);
+                $sql = "INSERT INTO ven_user(user_id, `order`, vn_id, vns_id, comment, create_at) 
+                        VALUES(:user_id, :order, :vn_id, :vns_id, '', :create_at)";
+                $q = $conn->prepare($sql);
+                $q->bindParam(':user_id', $u->user_id, PDO::PARAM_INT);
+                $q->bindParam(':order', $order, PDO::PARAM_INT);
+                $q->bindParam(':vn_id', $vn_id, PDO::PARAM_INT);
+                $q->bindParam(':vns_id', $vns_id, PDO::PARAM_INT);
+                $q->bindParam(':create_at', $create_at, PDO::PARAM_STR);
+                $q->execute();
+                $count++;
+            }
+            http_response_code(200);
+            echo json_encode(array('status' => true, 'message' => "เพิ่มผู้อยู่เวร $count คนเรียบร้อย"));
+            exit;
+        }
+
+        if($act == 'reorder'){
+            $updates = $data->updates;
+            foreach($updates as $item){
+                $sql = "UPDATE ven_user SET `order` = :order WHERE vu_id = :vu_id";
+                $q = $conn->prepare($sql);
+                $q->bindParam(':order', $item->order, PDO::PARAM_INT);
+                $q->bindParam(':vu_id', $item->vu_id, PDO::PARAM_INT);
+                $q->execute();
+            }
+            http_response_code(200);
+            echo json_encode(array('status' => true, 'message' => 'สลับลำดับเรียบร้อย'));
+            exit;
+        }
+
         http_response_code(200);
         echo json_encode(array('status' => false, 'message' => 'no content'));
         exit;  

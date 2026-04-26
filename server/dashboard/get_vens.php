@@ -22,11 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $res = $query->fetchAll(PDO::FETCH_OBJ);
         
 
-        $sql = "SELECT v.id, v.ven_date, v.ven_time, v.user_id as profile_id, v.u_role, v.DN, v.price, v.color, v.ven_com_name, v.status, v.comment, p.fname, p.`name`, p.sname, p.user_id
+        $sql = "SELECT v.id, v.ven_date, v.ven_time, v.user_id as profile_id, v.u_role, v.DN, v.price, v.color, v.ven_com_name, v.status, v.comment, v.vn_id, v.vns_id, p.fname, p.`name`, p.sname, p.user_id,
+                        COALESCE(vns.srt, 999) AS vns_srt
                 FROM ven AS v
                 INNER JOIN `profile` AS p ON v.user_id = p.id
+                LEFT JOIN ven_name_sub AS vns ON vns.id = v.vns_id
                 WHERE v.status = 1 OR v.status = 2
-                ORDER BY v.ven_date DESC, v.ven_time ASC
+                ORDER BY v.ven_date DESC, v.ven_time ASC, vns.srt ASC
                 LIMIT 5000";
         $query = $conn->prepare($sql);
         $query->execute();
@@ -51,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
                         'u_role' => $rs->u_role,
                         'ven_com_name' => $rs->ven_com_name,
                         'DN' => $rs->DN,
-                        'user_id' => $rs->user_id
+                        'user_id' => $rs->user_id,
+                        'vu_order' => (int)$rs->vns_srt
                     )
                 ));
             }

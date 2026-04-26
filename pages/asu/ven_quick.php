@@ -78,7 +78,7 @@ require_once('../../server/authen.php');
                 <section class="row">
                     <!-- Left Panel: User Queue -->
                     <div class="col-12 col-lg-3">
-                        <div class="card">
+                        <div class="card" style="position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow-y: auto;">
                             <div class="card-header bg-primary text-white py-2">
                                 <h6 class="mb-0">📋 ตั้งค่า & รายชื่อคิว</h6>
                             </div>
@@ -134,8 +134,12 @@ require_once('../../server/authen.php');
 
                                     <hr class="my-2">
                                     <div class="d-grid gap-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <label class="small fw-bold me-2 text-nowrap">คนต่อวัน:</label>
+                                            <input type="number" min="1" max="10" v-model.number="persons_per_day" class="form-control form-control-sm" style="width:70px;">
+                                        </div>
                                         <button class="btn btn-success btn-sm" @click="autoAssign()" :disabled="selected_users.length === 0">
-                                            🔄 จัดอัตโนมัติ ({{selected_users.length}} คน)
+                                            🔄 จัดอัตโนมัติ ({{selected_users.length}} คน, วันละ {{persons_per_day}} คน)
                                         </button>
                                         <button class="btn btn-outline-danger btn-sm" @click="clearAll()" v-if="schedule.some(s => s.assignments.length > 0)">
                                             🗑️ ล้างเวรทั้งเดือน
@@ -189,12 +193,12 @@ require_once('../../server/authen.php');
                                                 </td>
                                                 <td>
                                                     <span v-if="day.assignments.length === 0" class="text-muted small">- ว่าง -</span>
-                                                    <span v-for="a in day.assignments" :key="a.id"
+                                                    <span v-for="(a, aIdx) in day.assignments" :key="a.id"
                                                           class="badge me-1 mb-1 badge-remove"
                                                           :style="{ backgroundColor: a.color || '#6c757d', color: '#fff', fontSize: '13px' }"
-                                                          :title="a.comment ? '⚠️ ' + a.comment : ''"
+                                                          :title="(a.vu_order && a.vu_order < 999 ? 'ลำดับ ' + a.vu_order + ' | ' : '') + (a.comment ? '⚠️ ' + a.comment : '')"
                                                           @click="removeAssignment(a.id)">
-                                                        {{ a.name }} ✕
+                                                        {{ a.vu_order && a.vu_order < 999 ? a.vu_order + '.' : (aIdx+1) + '.' }} {{ a.name }} ✕
                                                     </span>
                                                 </td>
                                                 <td>

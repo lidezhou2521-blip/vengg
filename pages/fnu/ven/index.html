@@ -93,7 +93,7 @@
                         <tr v-for="vcs in ven_coms">
                             <td></td>
                             <td>
-                                {{vcs.ven_com_num}} {{vcs.ven_name}}
+                                {{vcs.ven_com_num}} <strong>{{vcs.vn_name}}</strong>
                             </td>
                             <td>
                                 <a :href="'./report_a0.html?ven_com_id='+vcs.id" target="_blank">ใบขวางสรุป </a> 

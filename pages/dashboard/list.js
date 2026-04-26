@@ -124,7 +124,14 @@ createApp({
                 .map(group => {
                     return {
                         ...group,
-                        dutyGroups: Object.values(group.dutyGroups)
+                        dutyGroups: Object.values(group.dutyGroups).map(dg => {
+                            dg.events.sort((a, b) => {
+                                const orderA = (a.extendedProps && a.extendedProps.vu_order) || 999;
+                                const orderB = (b.extendedProps && b.extendedProps.vu_order) || 999;
+                                return orderA - orderB;
+                            });
+                            return dg;
+                        })
                     };
                 });
         }

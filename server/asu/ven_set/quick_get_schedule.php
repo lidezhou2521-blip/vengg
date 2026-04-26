@@ -34,14 +34,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Get existing duties for this month/command/position
         if ($vc_id && $vns_id) {
             $sql = "SELECT v.id, v.ven_date, v.user_id, v.u_role, v.DN, v.color, v.comment, v.status,
-                        p.fname, p.name, p.sname
+                        p.fname, p.name, p.sname,
+                        COALESCE(vns.srt, 999) AS vns_srt
                     FROM ven AS v
                     INNER JOIN `profile` AS p ON p.user_id = v.user_id
+                    LEFT JOIN ven_name_sub AS vns ON vns.id = v.vns_id
                     WHERE v.ven_month = :ven_month
                         AND v.ven_com_idb = :vc_id
                         AND v.vns_id = :vns_id
                         AND (v.status = 1 OR v.status = 2)
-                    ORDER BY v.ven_date ASC, v.ven_time ASC";
+                    ORDER BY v.ven_date ASC, vns.srt ASC, v.ven_time ASC";
             $query = $conn->prepare($sql);
             $query->bindParam(':ven_month', $ven_month);
             $query->bindParam(':vc_id', $vc_id);
@@ -59,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'DN' => $rs->DN,
                         'color' => $rs->color,
                         'comment' => $rs->comment,
-                        'status' => $rs->status
+                        'status' => $rs->status,
+                        'vu_order' => (int)$rs->vns_srt
                     ));
                 }
             }

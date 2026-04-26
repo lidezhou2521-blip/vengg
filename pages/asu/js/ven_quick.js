@@ -16,6 +16,7 @@ Vue.createApp({
       draggedOverIndex: -1,
       holidays: [],
       draggedUserIndex: -1,
+      persons_per_day: 1,
     }
   },
   mounted() {
@@ -285,12 +286,19 @@ Vue.createApp({
           });
       });
 
+      // Build ordered map: uid -> order (from profiles which come sorted by vu.order from API)
+      const userOrderMap = {};
+      this.profiles.forEach((p, idx) => {
+        userOrderMap[p.uid] = p.order !== undefined ? p.order : (idx + 1);
+      });
+
       const sortedSelectedUsers = this.profiles
           .filter(p => this.selected_users.includes(p.uid))
           .map(p => p.uid);
 
       let userIdx = 0;
       const batchData = [];
+      const ppd = this.persons_per_day || 1;
 
       for (let i = 0; i < this.schedule.length; i++) {
         const day = this.schedule[i];
@@ -326,24 +334,28 @@ Vue.createApp({
             if (!shouldAssign) continue;
         }
 
-        const uid = sortedSelectedUsers[userIdx % sortedSelectedUsers.length];
-        
-        batchData.push({
-            uid: uid,
-            ven_date: day.ven_date,
-            ven_month: this.ven_month,
-            vc_id: this.ven_com.vc_id,
-            vn_id: this.ven_com.vn_id,
-            vns_id: this.ven_name_sub.vns_id,
-            DN: this.ven_com.DN,
-            ven_name: this.ven_com.name,
-            ven_com_num: this.ven_com.ven_com_num,
-            u_role: this.ven_name_sub.name,
-            price: this.ven_name_sub.price,
-            color: this.ven_name_sub.color,
-        });
-        
-        userIdx++;
+        // Assign ppd persons for this day
+        for (let p = 0; p < ppd; p++) {
+          const uid = sortedSelectedUsers[userIdx % sortedSelectedUsers.length];
+          
+          batchData.push({
+              uid: uid,
+              ven_date: day.ven_date,
+              ven_month: this.ven_month,
+              vc_id: this.ven_com.vc_id,
+              vn_id: this.ven_com.vn_id,
+              vns_id: this.ven_name_sub.vns_id,
+              DN: this.ven_com.DN,
+              ven_name: this.ven_com.name,
+              ven_com_num: this.ven_com.ven_com_num,
+              u_role: this.ven_name_sub.name,
+              price: this.ven_name_sub.price,
+              color: this.ven_name_sub.color,
+              vu_order: userOrderMap[uid] || (userIdx + 1),
+          });
+          
+          userIdx++;
+        }
       }
 
       if (batchData.length > 0) {
@@ -406,7 +418,12 @@ Vue.createApp({
     },
 
     onDragStart(event, uid, index = -1) {
-      event.dataTransfer.setData('text/plain', uid);
+      // If dragged user is in selected list, mark as multi-drag
+      if (this.selected_users.includes(uid) && this.selected_users.length > 1) {
+        event.dataTransfer.setData('text/plain', 'multi');
+      } else {
+        event.dataTransfer.setData('text/plain', uid);
+      }
       event.dataTransfer.effectAllowed = 'move';
       this.draggedUserIndex = index;
     },
@@ -421,12 +438,52 @@ Vue.createApp({
       }
     },
 
-    onDrop(event, dayIndex) {
+    async onDrop(event, dayIndex) {
       this.draggedOverIndex = -1;
       this.draggedUserIndex = -1;
-      const uid = event.dataTransfer.getData('text/plain');
-      if (uid) {
-        this.assignUser(dayIndex, uid);
+      const data = event.dataTransfer.getData('text/plain');
+      if (!data) return;
+
+      if (data === 'multi' && this.selected_users.length > 0) {
+        // Batch assign all selected users to this day
+        const day = this.schedule[dayIndex];
+        const sortedSelected = this.profiles
+          .filter(p => this.selected_users.includes(p.uid))
+          .map(p => p.uid);
+
+        this.isLoading = true;
+        const batchData = sortedSelected.map(uid => ({
+          uid: uid,
+          ven_date: day.ven_date,
+          ven_month: this.ven_month,
+          vc_id: this.ven_com.vc_id,
+          vn_id: this.ven_com.vn_id,
+          vns_id: this.ven_name_sub.vns_id,
+          DN: this.ven_com.DN,
+          ven_name: this.ven_com.name,
+          ven_com_num: this.ven_com.ven_com_num,
+          u_role: this.ven_name_sub.name,
+          price: this.ven_name_sub.price,
+          color: this.ven_name_sub.color,
+        }));
+
+        axios.post('../../server/asu/ven_set/quick_assign.php', {
+          act: 'batch_insert',
+          assignments: batchData
+        })
+          .then(response => {
+            if (response.data.status) {
+              this.alert('success', 'เพิ่ม ' + sortedSelected.length + ' คนเรียบร้อย', 1500);
+            } else {
+              this.alert('warning', response.data.message, 0);
+            }
+            this.loadSchedule();
+          })
+          .catch(error => console.log(error))
+          .finally(() => this.isLoading = false);
+      } else {
+        // Single user assign
+        this.assignUser(dayIndex, data);
       }
     },
 
@@ -445,9 +502,9 @@ Vue.createApp({
       const newIndex = index + direction;
       if (newIndex < 0 || newIndex >= this.profiles.length) return;
       
-      const temp = this.profiles[index];
-      this.profiles[index] = this.profiles[newIndex];
-      this.profiles[newIndex] = temp;
+      // Use splice so Vue can detect the change and re-render
+      const item = this.profiles.splice(index, 1)[0];
+      this.profiles.splice(newIndex, 0, item);
     }
   }
 }).mount('#venQuick');

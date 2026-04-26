@@ -6,125 +6,250 @@ require_once('../../server/authen.php');
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
 <?php require_once('../includes/_header.php') ?>
-<!-- Styles -->
-<link rel="stylesheet" href="../../node_modules/select2-bootstrap-5-theme/dist/css/select2.min.css" />
-<link rel="stylesheet" href="../../node_modules/select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css" />
-<!-- Or for RTL support -->
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.rtl.min.css" /> -->
+<style>
+  [v-cloak] > * { display:none; }
+  [v-cloak]::before { content: "loading..."; }
 
+  /* User list panel */
+  .user-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    padding: 15px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 10px;
+  }
+
+  .user-panel .user-item {
+    cursor: grab;
+    margin: 5px 0;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    border-left: 4px solid #435ebe;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .user-panel .user-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: #f1f5f9;
+  }
+
+  .user-panel .user-item:active { cursor: grabbing; }
+  .user-panel .user-item.dragging { opacity: 0.4; }
+
+  /* Drop zone cards */
+  .duty-group-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .duty-group-header {
+    padding: 10px 16px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .duty-group-body {
+    padding: 10px 14px;
+    min-height: 50px;
+    transition: background 0.2s;
+  }
+
+  .duty-group-body.drag-over {
+    background: #ebf5ff;
+    border: 2px dashed #435ebe;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .duty-group-body .members-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .duty-group-body .member-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    margin: 0;
+    background: #f8fafc;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  .duty-group-body .member-item .btn-sm {
+    padding: 0 4px;
+    font-size: 0.68rem;
+    line-height: 1;
+    border-radius: 50%;
+  }
+
+  .duty-group-body .member-item[draggable="true"] {
+    cursor: grab;
+  }
+
+  .duty-group-body .member-item[draggable="true"]:active {
+    cursor: grabbing;
+  }
+
+  .duty-group-body .member-item.dragging {
+    opacity: 0.4;
+  }
+
+  .duty-group-body .member-item.member-drag-over {
+    border-left: 3px solid #435ebe;
+    background: #ebf5ff;
+  }
+
+  .drop-hint {
+    text-align: center;
+    color: #cbd5e0;
+    font-size: 0.82rem;
+    padding: 12px 0;
+  }
+
+  /* Custom scrollbar */
+  .user-panel::-webkit-scrollbar { width: 4px; }
+  .user-panel::-webkit-scrollbar-track { background: transparent; }
+  .user-panel::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+</style>
 </head>
 <body>
 <div id="app">
-        <?php require_once('../includes/_sidebar.php') ?>
-        <div id="main">
-            <header class="mb-3">
-                <a href="#" class="burger-btn d-block d-xl-none">
-                    <i class="bi bi-justify fs-3"></i>
-                </a>
-            </header>
+    <?php require_once('../includes/_sidebar.php') ?>
+    <div id="main">
+        <header class="mb-3">
+            <a href="#" class="burger-btn d-block d-xl-none">
+                <i class="bi bi-justify fs-3"></i>
+            </a>
+        </header>
 
-            <div class="page-heading">
-                <h3>เตรียมผู้อยู่เวร</h3>
-            </div>
-            
-            <div class="page-content" id="venUser" v-cloak> 
-                <!-- {{datas}}             -->
-                <!-- {{users}} -->
+        <div class="page-heading">
+            <h3>เตรียมผู้อยู่เวร</h3>
+        </div>
 
-                <section class="row" v-for="data, index in datas">
-                    <div class="card-body" >
-                        <h5 class="card-title" :style="'background-color: '+data.color+' ; color:white;'" >
-                            {{data.vn_name}} ({{data.DN == 'กลางวัน' ? '☀️' : '🌙'}} {{data.DN}}) {{data.vns_name}} 
-                        </h5>
-                                
-                        <div v-if="ven_users" v-for="d_user in data.users" >
-                            <li class="list-group-item" >
-                                <!-- {{d_user}} -->
-                                {{data.vns_DN == 'กลางวัน' ? '☀️' : '🌙'}}{{d_user.order + ' ' +d_user.name + ' '}} 
-                                <button @click="vu_up(d_user.vu_id)" class="btn btn-warning btn-sm me-1">แก้ไข</button>
-                                <button @click="vu_del(d_user.vu_id)" class="btn btn-danger btn-sm">ลบ</button>
-                            </li>     
+        <div class="page-content" id="venUser" v-cloak>
+
+
+            <div class="row">
+                <!-- Left: User List (draggable source) -->
+                <div class="col-lg-3 col-md-4">
+                    <div class="user-panel">
+                        <h6 class="fw-bold mb-2">
+                            <i class="bi bi-person-plus-fill text-primary me-1"></i>รายชื่อ
+                        </h6>
+
+                        <div class="mb-2">
+                            <input type="text" v-model="q_filter" class="form-control form-control-sm" placeholder="🔍 ค้นหาชื่อ...">
                         </div>
-                        <li class="list-group-item">
-                            <button class="btn btn-success me-2" @click="vu_add(index)">เพิ่มที่ละคน</button>
-                            <!-- <button class="btn btn-success" @click="vu_add_user_all(vni,vnsi)">
-                                {{isLoading ? 'Loading...' : 'เพิ่ม USER ทั้งหมด'}}
-                            </button> -->
-                        </li>                                  
+                        <div class="mb-3">
+                            <select class="form-select form-select-sm" v-model="workgroup_filter">
+                                <option value="">ทั้งหมด</option>
+                                <option v-for="wg in workgroups" :value="wg">{{wg}}</option>
+                            </select>
+                        </div>
 
-                    </div>
-                </section>
-                
+                        <div class="text-muted small mb-2">
+                            <i class="bi bi-grip-vertical"></i> ลากรายชื่อไปวาง ({{filtered_users.length}} คน)
+                        </div>
 
-                <!-- Modal venUser Form -->
-                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#ven_user" ref="show_vu_form" hidden >
-                        เพิ่มผู้อยู่เวร
-                </button>
-                <!-- Modal venUser Form -->
-                <div class="modal fade" id="ven_user" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="staticBackdropLabel">{{vu_form_act == 'insert' ? 'เพิ่มชื่อผู้อยู่เวร' : 'แก้ไขชื่อผู้อยู่เวร'}}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="clear_vu_form" ref="close_vu"></button>
-                            </div>
-                            <div class="modal-body">
-                                <!-- {{vu_form}} -->
-                                <!-- {{vu_form_act}} -->
-                                <form @submit.prevent="vu_save">                                    
-                                    <div class="row mb-3">                                        
-                                        <div class="col mb-3">
-                                            <label for="srt" class="form-label">ลำดับ</label>
-                                            <input type="number" min="0" class="form-control" id="srt" v-model="vu_form.order">
-                                        </div>
-                                        <div class="col mb-3">
-                                            <label for="nameuf" class="form-label">ชื่อ</label>
-                                            <select class="form-select" id="basic-usage"  aria-label="Default select example" v-model="vu_form.user_id" >
-                                                <optgroup label="ผู้พิพากษา" v-if="judge.length > 0">
-                                                    <option v-for="j in judge" :value="j.uid" >  
-                                                    {{j.name}}
-                                                </option>
-                                                <optgroup label="เจ้าหน้าที่" v-if="not_judge.length > 0">
-                                                    <option v-for="u in not_judge" :value="u.uid" >  
-                                                    {{u.name}}
-                                                </option>
-                                                <!-- <option v-for="u in users" :value="u.uid" >{{u.name}}</option> -->
-                                                  
-                                            </select>
-                                        </div> 
-                                                                            
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <!-- <button type="button" class="col-auto me-auto btn btn-danger" v-if="vu_form_act !='insert'" @click.prevent="ven_name_del()">ลบ {{ven_name_form.id}}</button> -->
-                                        <button type="submit" class="col-auto btn btn-primary">บันทึก</button>
-                                    </div>
-                                </form>                                
-                            </div>
+                        <div v-for="u in filtered_users" :key="u.uid"
+                             class="user-item"
+                             draggable="true"
+                             @dragstart="onDragStart($event, u)"
+                             @dragend="onDragEnd($event)">
+                            <i class="bi bi-grip-vertical me-1 opacity-50"></i>
+                            {{u.name}}
+                        </div>
+
+                        <div v-if="filtered_users.length === 0" class="text-center py-3 text-muted small">
+                            <i class="bi bi-person-dash fs-4 d-block mb-1"></i>
+                            ไม่พบรายชื่อ
                         </div>
                     </div>
                 </div>
 
+                <!-- Right: Duty Groups (drop zones) -->
+                <div class="col-lg-9 col-md-8">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-12" v-for="(data, index) in datas" :key="data.vn_id + '-' + data.vns_id">
+                            <div class="duty-group-card">
+                                <div class="duty-group-header" :style="'background-color:' + data.color">
+                                    <span>
+                                        {{data.DN == 'กลางวัน' ? '☀️' : '🌙'}}
+                                        {{data.vn_name}} - {{data.vns_name}}
+                                    </span>
+                                    <span>
+                                        <span class="badge bg-white text-dark me-1" style="font-size:0.75rem">{{data.users ? data.users.length : 0}} คน</span>
+                                        <button v-if="data.users && data.users.length > 0" class="btn btn-sm btn-light py-0 px-1" @click="vu_del_group(data)" title="ลบทั้งกลุ่ม">
+                                            <i class="bi bi-trash text-danger" style="font-size:0.75rem"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="duty-group-body"
+                                     @dragover.prevent="onDropZoneDragOver($event)"
+                                     @dragleave="onDropZoneDragLeave($event)"
+                                     @drop="onDropZoneDrop($event, data)">
+                                    
+                                    <div v-if="data.users && data.users.length > 0" class="members-wrap">
+                                        <div class="member-item" 
+                                             v-for="(u, mi) in data.users" :key="u.vu_id"
+                                             draggable="true"
+                                             @dragstart="onMemberDragStart($event, index, mi)"
+                                             @dragend="onMemberDragEnd($event)"
+                                             @dragover.prevent.stop="onMemberDragOver($event, index, mi)"
+                                             @dragleave="onMemberDragLeave($event)"
+                                             @drop.stop="onMemberDrop($event, index, mi)">
+                                            <i class="bi bi-grip-vertical opacity-40" style="cursor:grab"></i>
+                                            <span>{{u.order}}. {{u.name}}</span>
+                                            <button class="btn btn-outline-danger btn-sm" @click="vu_del(u.vu_id)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
 
+                                    <div v-else class="drop-hint">
+                                        <i class="bi bi-box-arrow-in-down fs-5 d-block mb-1"></i>
+                                        ลากรายชื่อมาวางที่นี่
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <?php require_once('../includes/_footer.php') ?>
         </div>
+
+        <?php require_once('../includes/_footer.php') ?>
     </div>
-    
-    <?php require_once('../includes/_footer_sc.php') ?>
-    <!-- <script src="../../assets/vendors/perfect-scrollbar/perfect-scrollbar.min.js"></script> -->    
-    <!-- <script src="../../assets/js/main.js"></script> -->
+</div>
 
-    <!--  -->
-    <script src="../../node_modules/vue/dist/vue.global.js"></script>
-    <script src="../../node_modules/vue/dist/vue.global.prod.js"></script>
-    <script src="../../node_modules/axios/dist/axios.js"></script>
-    <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
-    <!-- Scripts -->
-    <script src="./js/ven_user.js"></script>
-    
+<?php require_once('../includes/_footer_sc.php') ?>
+<script src="../../node_modules/vue/dist/vue.global.js"></script>
+<script src="../../node_modules/vue/dist/vue.global.prod.js"></script>
+<script src="../../node_modules/axios/dist/axios.js"></script>
+<script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
+<script src="./js/ven_user.js?v=<?php echo time(); ?>"></script>
+
 </body>
-
 </html>
