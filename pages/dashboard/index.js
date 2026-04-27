@@ -77,12 +77,12 @@ Vue.createApp({
         const stats = {};
         
         this.duty_types.forEach(type => {
-          if (type && type.name && type.u_role) {
-            const key = type.name + '|' + type.u_role;
+          if (type && type.vn_id) {
+            const key = String(type.vn_id);
             stats[key] = {
               key: key,
               name: type.name,
-              u_role: type.u_role,
+              u_role: type.u_role || '',
               color: type.color || '#cccccc',
               count: 0,
               active: this.selected_types.includes(key)
@@ -92,13 +92,10 @@ Vue.createApp({
 
         if (this.datas && Array.isArray(this.datas)) {
             this.datas.forEach(event => {
-            if (event && event.backgroundColor) {
-                const type = this.duty_types.find(t => t.color === event.backgroundColor);
-                if (type) {
-                const key = type.name + '|' + type.u_role;
+            if (event && event.extendedProps && event.extendedProps.vn_id) {
+                const key = String(event.extendedProps.vn_id);
                 if (stats[key]) {
                     stats[key].count++;
-                }
                 }
             }
             });
@@ -114,13 +111,12 @@ Vue.createApp({
         if (!this.datas) return [];
         let filtered = this.datas;
 
-        // Filter by selected types
+        // Filter by selected types — match by vn_id (duty name level)
         if (this.selected_types.length > 0) {
             filtered = filtered.filter(event => {
-                const type = this.duty_types.find(t => t.color === event.backgroundColor);
-                if (!type) return true; // Keep if we don't know the type
-                const key = type.name + '|' + type.u_role;
-                return this.selected_types.includes(key);
+                const ep = event.extendedProps || {};
+                if (!ep.vn_id) return true; // keep if unknown
+                return this.selected_types.includes(String(ep.vn_id));
             });
         }
 
@@ -163,15 +159,9 @@ Vue.createApp({
     },
     filteredEvents: {
         handler(newEvents) {
+            // Rebuild calendar whenever filter changes
             if (this.calendar) {
-                // Efficiently update events without full re-render if possible
-                const source = this.calendar.getEventSources()[0];
-                if (source) {
-                    // This is a bit tricky with raw FullCalendar
-                    // The simplest way is to destroy and re-render or use removeEvents/addEvents
-                    // But for now, let's just use the reactive updates in cal_render
-                    this.cal_render();
-                }
+                this.cal_render();
             }
         },
         deep: true
@@ -287,11 +277,11 @@ Vue.createApp({
             this.datas = response.data.respJSON;
             this.duty_types = response.data.res || [];
             
-            // Initialize selected_types with all found types if empty
+            // Initialize selected_types with all duty names (using vn_id)
             if (this.selected_types.length === 0) {
                 this.duty_types.forEach(type => {
-                    const key = type.name + '|' + type.u_role;
-                    if (!this.selected_types.includes(key)) {
+                    const key = String(type.vn_id);
+                    if (key && key !== 'undefined' && !this.selected_types.includes(key)) {
                         this.selected_types.push(key);
                     }
                 });

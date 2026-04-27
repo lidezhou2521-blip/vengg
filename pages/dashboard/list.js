@@ -24,20 +24,21 @@ createApp({
             if (!this.dutyTypes || !Array.isArray(this.dutyTypes)) return [];
             const stats = {};
             this.dutyTypes.forEach(type => {
-                const key = type.name + '|' + type.u_role;
+                if (!type.vn_id) return;
+                const key = String(type.vn_id);
                 stats[key] = {
                     key: key,
                     name: type.name,
-                    u_role: type.u_role,
+                    u_role: type.u_role || '',
                     color: type.color || '#cccccc',
                     count: 0,
                     active: this.selected_types.includes(key)
                 };
             });
             this.datas.forEach(event => {
-                const type = this.dutyTypes.find(t => t.color === event.backgroundColor);
-                if (type) {
-                    const key = type.name + '|' + type.u_role;
+                const ep = event.extendedProps || {};
+                if (ep.vn_id) {
+                    const key = String(ep.vn_id);
                     if (stats[key]) stats[key].count++;
                 }
             });
@@ -52,9 +53,9 @@ createApp({
                 filtered = filtered.filter(ev => {
                     const ep = ev.extendedProps || {};
                     return (ev.title && ev.title.toLowerCase().includes(q)) ||
-                           (ep.u_name && ep.u_name.toLowerCase().includes(q)) ||
-                           (ep.u_role && ep.u_role.toLowerCase().includes(q)) ||
-                           (ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(q));
+                        (ep.u_name && ep.u_name.toLowerCase().includes(q)) ||
+                        (ep.u_role && ep.u_role.toLowerCase().includes(q)) ||
+                        (ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(q));
                 });
             }
 
@@ -74,13 +75,12 @@ createApp({
                 });
             }
 
-            // Type filter (selected_types)
+            // Type filter — match by vn_id (duty name level)
             if (this.selected_types.length > 0) {
                 filtered = filtered.filter(ev => {
-                    const type = this.dutyTypes.find(t => t.color === ev.backgroundColor);
-                    if (!type) return true;
-                    const key = type.name + '|' + type.u_role;
-                    return this.selected_types.includes(key);
+                    const ep = ev.extendedProps || {};
+                    if (!ep.vn_id) return true;
+                    return this.selected_types.includes(String(ep.vn_id));
                 });
             }
 
@@ -95,6 +95,13 @@ createApp({
         },
         groupedEvents() {
             const groups = {};
+
+            // Build a lookup: vn_id → original color from dutyTypes
+            const colorMap = {};
+            (this.dutyTypes || []).forEach(t => {
+                if (t.vn_id) colorMap[String(t.vn_id)] = t.color || '#cccccc';
+            });
+
             this.filteredEvents.forEach(ev => {
                 const dateStr = ev.start.split(' ')[0];
                 if (!groups[dateStr]) {
@@ -106,12 +113,16 @@ createApp({
                         dutyGroups: {}
                     };
                 }
-                
-                const typeKey = ev.backgroundColor + '|' + ev.extendedProps.ven_com_name;
+
+                // Key by vn_id (not backgroundColor) so conflict-red entries stay in same group
+                const ep = ev.extendedProps || {};
+                const typeKey = String(ep.vn_id || '') + '|' + (ep.ven_com_name || '');
                 if (!groups[dateStr].dutyGroups[typeKey]) {
+                    // Use original duty color, not the conflict red
+                    const origColor = colorMap[String(ep.vn_id)] || ev.backgroundColor;
                     groups[dateStr].dutyGroups[typeKey] = {
-                        name: ev.extendedProps.ven_com_name,
-                        color: ev.backgroundColor,
+                        name: ep.ven_com_name,
+                        color: origColor,
                         events: []
                     };
                 }
@@ -125,11 +136,8 @@ createApp({
                     return {
                         ...group,
                         dutyGroups: Object.values(group.dutyGroups).map(dg => {
-                            dg.events.sort((a, b) => {
-                                const orderA = (a.extendedProps && a.extendedProps.vu_order) || 999;
-                                const orderB = (b.extendedProps && b.extendedProps.vu_order) || 999;
-                                return orderA - orderB;
-                            });
+                            // Sort by ven_time (encoded in ev.start) — correctly reflects queue order
+                            dg.events.sort((a, b) => a.start.localeCompare(b.start));
                             return dg;
                         })
                     };
@@ -154,12 +162,12 @@ createApp({
                         this.ssid = response.data.ssid || '';
                         console.log("Datas fetched:", this.datas.length);
                         console.log("SSID from API:", this.ssid);
-                        
-                        // Initialize selected_types with all found types
+
+                        // Initialize selected_types with all duty names (using vn_id)
                         if (this.selected_types.length === 0) {
                             this.dutyTypes.forEach(type => {
-                                const key = type.name + '|' + type.u_role;
-                                if (!this.selected_types.includes(key)) {
+                                const key = String(type.vn_id);
+                                if (key && key !== 'undefined' && !this.selected_types.includes(key)) {
                                     this.selected_types.push(key);
                                 }
                             });

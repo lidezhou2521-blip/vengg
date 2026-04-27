@@ -37,10 +37,10 @@ require_once('../../server/authen.php');
                     <div class="text-center mb-4">
                         <h5 class="text-bold">บัญชีรายชื่อข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้าง</h5>
                         <h5 class="text-bold">แนบท้ายคำสั่งศาล ที่ {{toThaiNum(datas.vc.ven_com_num)}} ลงวันที่ {{date_thai(datas.vc.ven_com_date)}}</h5>
-                        <h5 class="text-bold">เรื่อง ให้ข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้างปฏิบัติงานนอกเวลาราชการ และในวันหยุดราชการ</h5>
-                        <h5 class="text-bold">เวรหมายจับ หมายค้น เวลา ๑๖.๓๐ น. - ๐๘.๓๐ น. ของวันรุ่งขึ้น (เวรกลางคืน)</h5>
-                        <br>
-                        <h5 class="text-bold">ประจำเดือน {{toThaiNum(datas.vc.ven_month_th)}}</h5>
+                        <h7 class="text-bold">เรื่อง ให้ข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้างปฏิบัติงานนอกเวลาราชการ </h7>
+                        <h7 class="text-bold">และในวันหยุดราชการ เวรหมายจับ หมายค้น เวลา ๑๖.๓๐ น. - ๐๘.๓๐ น. ของวันรุ่งขึ้น (เวรกลางคืน)</h7>
+                        
+                        <h6 class="text-bold">ประจำเดือน {{toThaiNum(datas.vc.ven_month_th)}}</h6>
                     </div>
 
                     <table class="table table-bordered text-center">
@@ -88,8 +88,8 @@ require_once('../../server/authen.php');
                 if(!this.datas.respJSON) return [];
                 const data = this.datas.respJSON;
                 const chunks = [];
-                for (let i = 0; i < data.length; i += 10) {
-                    chunks.push(data.slice(i, i + 10));
+                for (let i = 0; i < data.length; i += 12) {
+                    chunks.push(data.slice(i, i + 12));
                 }
                 return chunks;
             }

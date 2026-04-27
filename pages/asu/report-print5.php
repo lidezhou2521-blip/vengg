@@ -36,8 +36,8 @@ require_once('../../server/authen.php');
                     <div class="text-center mb-4">
                         <h5 class="text-bold">บัญชีรายชื่อข้าราชการฝ่ายตุลาการศาลยุติธรรมและพนักงานราชการ</h5>
                         <h5 class="text-bold">แนบท้ายคำสั่งศาล ที่ {{datas.vc.ven_com_num}} ลงวันที่ {{date_thai(datas.vc.ven_com_date)}}</h5>
-                        <h5 class="text-bold">เรื่อง ให้ข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้างปฏิบัติงานนอกเวลาราชการ และในวันหยุดราชการ</h5>
-                        <h5 class="text-bold">ประจำเดือน {{datas.vc.ven_month_th}}</h5>
+                        <h7 class="text-bold">เรื่อง ให้ข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้างปฏิบัติงานนอกเวลาราชการ และในวันหยุดราชการ</h7>
+                        <h7 class="text-bold">ประจำเดือน {{datas.vc.ven_month_th}}</h7>
                     </div>
 
                     <table class="table table-bordered text-center" v-for="(day, index) in page" :key="index">

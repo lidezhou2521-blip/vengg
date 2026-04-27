@@ -35,10 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($vc_id && $vns_id) {
             $sql = "SELECT v.id, v.ven_date, v.user_id, v.u_role, v.DN, v.color, v.comment, v.status,
                         p.fname, p.name, p.sname,
-                        COALESCE(vns.srt, 999) AS vns_srt
+                        COALESCE(vns.srt, 999) AS vns_srt,
+                        COALESCE(vu.order, 999) AS vu_order
                     FROM ven AS v
                     INNER JOIN `profile` AS p ON p.user_id = v.user_id
                     LEFT JOIN ven_name_sub AS vns ON vns.id = v.vns_id
+                    LEFT JOIN ven_user AS vu ON vu.user_id = v.user_id AND vu.vns_id = v.vns_id
                     WHERE v.ven_month = :ven_month
                         AND v.ven_com_idb = :vc_id
                         AND v.vns_id = :vns_id
@@ -62,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'color' => $rs->color,
                         'comment' => $rs->comment,
                         'status' => $rs->status,
-                        'vu_order' => (int)$rs->vns_srt
+                        'vu_order' => (int)$rs->vu_order
                     ));
                 }
             }

@@ -265,10 +265,26 @@ Vue.createApp({
       this.isLoading = true;
 
       // 1. ตรวจสอบกลุ่มวันหยุดต่อเนื่อง (Identify Holiday Blocks)
+      // Also peek into next month in case holidays continue beyond current month
+      const isHolidayOrWeekend = (dateStr) => {
+          const parts = dateStr.split('-');
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          const isWE = d.getDay() === 0 || d.getDay() === 6;
+          const isH  = this.holidays.some(h => h.holiday_date === dateStr);
+          return isWE || isH;
+      };
+      const addDays = (dateStr, n) => {
+          const parts = dateStr.split('-');
+          const d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + n);
+          return d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+      };
+
       const blocks = [];
       let currentBlock = null;
       for (const day of this.schedule) {
-          if (this.isWeekend(day.ven_date) || this.isHoliday(day.ven_date)) {
+          if (isHolidayOrWeekend(day.ven_date)) {
               if (!currentBlock) {
                   currentBlock = { dates: [] };
                   blocks.push(currentBlock);
@@ -276,6 +292,22 @@ Vue.createApp({
               currentBlock.dates.push(day.ven_date);
           } else {
               currentBlock = null;
+          }
+      }
+
+      // Extend last block if next-month days are also holidays
+      if (blocks.length > 0) {
+          const lastBlock = blocks[blocks.length - 1];
+          const lastDateInSchedule = this.schedule[this.schedule.length - 1].ven_date;
+          const lastBlockLastDate = lastBlock.dates[lastBlock.dates.length - 1];
+          if (lastBlockLastDate === lastDateInSchedule) {
+              // Block ends on last day of schedule — peek next month
+              let peekDate = addDays(lastDateInSchedule, 1);
+              while (isHolidayOrWeekend(peekDate)) {
+                  lastBlock.dates.push(peekDate);
+                  peekDate = addDays(peekDate, 1);
+                  if (lastBlock.dates.length > 14) break; // safety cap
+              }
           }
       }
       
@@ -286,10 +318,10 @@ Vue.createApp({
           });
       });
 
-      // Build ordered map: uid -> order (from profiles which come sorted by vu.order from API)
+      // Build ordered map: uid -> visual position in current profiles list (NOT DB order)
       const userOrderMap = {};
       this.profiles.forEach((p, idx) => {
-        userOrderMap[p.uid] = p.order !== undefined ? p.order : (idx + 1);
+        userOrderMap[p.uid] = idx + 1;  // use current visual position
       });
 
       const sortedSelectedUsers = this.profiles
@@ -408,12 +440,16 @@ Vue.createApp({
     },
 
     alert(icon, message, timer = 0) {
+      const validIcons = ['success', 'error', 'warning', 'info', 'question'];
+      const safeIcon = validIcons.includes(icon) ? icon : 'info';
+      const safeMsg = message || '-';
       swal.fire({
         position: 'top-end',
-        icon: icon,
-        title: message,
+        icon: safeIcon,
+        title: safeMsg,
         showConfirmButton: timer === 0,
-        timer: timer
+        timer: timer > 0 ? timer : undefined,
+        confirmButtonText: 'ตกลง',
       });
     },
 
@@ -448,12 +484,12 @@ Vue.createApp({
         // Batch assign all selected users to this day
         const day = this.schedule[dayIndex];
         const sortedSelected = this.profiles
-          .filter(p => this.selected_users.includes(p.uid))
-          .map(p => p.uid);
+          .filter(p => this.selected_users.includes(p.uid));
 
         this.isLoading = true;
-        const batchData = sortedSelected.map(uid => ({
-          uid: uid,
+        const batchData = sortedSelected.map((p, idx) => ({
+          uid: p.uid,
+          vu_order: idx + 1,  // use visual position in selected list (not DB p.order)
           ven_date: day.ven_date,
           ven_month: this.ven_month,
           vc_id: this.ven_com.vc_id,
@@ -473,13 +509,15 @@ Vue.createApp({
         })
           .then(response => {
             if (response.data.status) {
-              this.alert('success', 'เพิ่ม ' + sortedSelected.length + ' คนเรียบร้อย', 1500);
+              this.alert('success', response.data.message || ('เพิ่ม ' + sortedSelected.length + ' คนเรียบร้อย'), 1500);
             } else {
-              this.alert('warning', response.data.message, 0);
+              this.alert('warning', response.data.message || 'เกิดข้อผิดพลาด', 0);
             }
             this.loadSchedule();
           })
-          .catch(error => console.log(error))
+          .catch(error => {
+            this.alert('error', 'เกิดข้อผิดพลาด: ' + error.message, 0);
+          })
           .finally(() => this.isLoading = false);
       } else {
         // Single user assign

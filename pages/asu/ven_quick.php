@@ -141,6 +141,10 @@ require_once('../../server/authen.php');
                                         <button class="btn btn-success btn-sm" @click="autoAssign()" :disabled="selected_users.length === 0">
                                             🔄 จัดอัตโนมัติ ({{selected_users.length}} คน, วันละ {{persons_per_day}} คน)
                                         </button>
+                                        <div class="text-muted mt-1 mb-1" style="font-size: 11px; line-height: 1.4;">
+                                            <i class="bi bi-info-circle"></i>
+                                            ปุ่มจัดอัตโนมัติสำหรับคิวรายชื่อที่มีการเรียงลำดับต่อเนื่องเท่านั้น
+                                        </div>
                                         <button class="btn btn-outline-danger btn-sm" @click="clearAll()" v-if="schedule.some(s => s.assignments.length > 0)">
                                             🗑️ ล้างเวรทั้งเดือน
                                         </button>

@@ -12,13 +12,103 @@ $data = json_decode(file_get_contents("php://input"));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $data->act; // 'insert' or 'delete' or 'batch_insert'
 
+/**
+ * Re-evaluate conflict colors for all ven records on the given dates.
+ * Restores original color (from ven_name_sub) if no conflict, sets #ff0000 if conflict found.
+ */
+function recalcConflicts($conn, array $dates) {
+    foreach ($dates as $ven_date) {
+        // Get all active records for this date with original color from ven_name_sub
+        $sql = "SELECT v.id, v.user_id, v.DN, v.vns_id, v.ven_name,
+                       COALESCE(vns.color, v.color) AS orig_color
+                FROM ven AS v
+                LEFT JOIN ven_name_sub AS vns ON vns.id = v.vns_id
+                WHERE v.ven_date = :ven_date AND (v.status = 1 OR v.status = 2)";
+        $q = $conn->prepare($sql);
+        $q->bindParam(':ven_date', $ven_date);
+        $q->execute();
+        $records = $q->fetchAll(PDO::FETCH_OBJ);
+
+        $ven_date_prev = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
+        $ven_date_next = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
+
+        foreach ($records as $rec) {
+            $conflict_msg = '';
+            $new_color    = $rec->orig_color; // default: original color
+
+            // Query adjacent dates for this user
+            $sql_adj = "SELECT v.DN, v.ven_date, v.vns_id, v.ven_name, v.u_role,
+                               p.fname, p.name, p.sname
+                        FROM ven AS v
+                        INNER JOIN `profile` AS p ON p.user_id = v.user_id
+                        WHERE v.user_id = :user_id
+                          AND v.ven_date >= :d_prev AND v.ven_date <= :d_next
+                          AND v.id != :self_id
+                          AND (v.status = 1 OR v.status = 2)";
+            $q_adj = $conn->prepare($sql_adj);
+            $q_adj->bindParam(':user_id', $rec->user_id, PDO::PARAM_INT);
+            $q_adj->bindParam(':d_prev', $ven_date_prev);
+            $q_adj->bindParam(':d_next', $ven_date_next);
+            $q_adj->bindParam(':self_id', $rec->id, PDO::PARAM_INT);
+            $q_adj->execute();
+
+            foreach ($q_adj->fetchAll(PDO::FETCH_OBJ) as $adj) {
+                $u_display = $adj->fname . $adj->name . ' ' . $adj->sname;
+                // Same day, different vns_id
+                if ($adj->ven_date == $ven_date && $adj->vns_id != $rec->vns_id) {
+                    $conflict_msg = $u_display . ' มีเวรวันเดียวกัน (' . $adj->u_role . ')';
+                    $new_color = '#ff0000';
+                }
+                // กลางวัน แต่มีกลางคืนวันก่อน
+                if ($rec->DN == 'กลางวัน' && $adj->ven_date == $ven_date_prev && $adj->DN == 'กลางคืน') {
+                    $conflict_msg = $u_display . ' มีเวรกลางคืนวันก่อนหน้า';
+                    $new_color = '#ff0000';
+                }
+                // กลางคืน แต่มีกลางวันวันถัดไป
+                if ($rec->DN == 'กลางคืน' && $adj->ven_date == $ven_date_next && $adj->DN == 'กลางวัน') {
+                    $conflict_msg = $u_display . ' มีเวรกลางวันวันถัดไป';
+                    $new_color = '#ff0000';
+                }
+                // หมายจับ-ค้น กลางคืน + มีกลางวันวันเดียวกัน
+                if ($adj->ven_date == $ven_date && $adj->DN == 'กลางวัน'
+                    && strpos($rec->ven_name, 'หมายจับ-ค้น') !== false && $rec->DN == 'กลางคืน') {
+                    $conflict_msg = $u_display . ' มีเวรกลางวันในวันเดียวกัน';
+                    $new_color = '#ff0000';
+                }
+            }
+
+            // Update color and comment
+            $upd = $conn->prepare("UPDATE ven SET color = :color, comment = :comment WHERE id = :id");
+            $upd->bindParam(':color',   $new_color);
+            $upd->bindParam(':comment', $conflict_msg);
+            $upd->bindParam(':id',      $rec->id, PDO::PARAM_INT);
+            $upd->execute();
+        }
+    }
+}
+
     try {
         if ($act == 'delete') {
             $id = $data->id;
+
+            // Get the date before deleting so we can recalc after
+            $q_date = $conn->prepare("SELECT ven_date FROM ven WHERE id = :id");
+            $q_date->bindParam(':id', $id, PDO::PARAM_INT);
+            $q_date->execute();
+            $del_row = $q_date->fetch(PDO::FETCH_OBJ);
+            $del_date = $del_row ? $del_row->ven_date : null;
+
             $sql = "DELETE FROM ven WHERE id = :id AND (status = 1 OR status = 2)";
             $query = $conn->prepare($sql);
             $query->bindParam(':id', $id, PDO::PARAM_INT);
             $query->execute();
+
+            // Recalc conflict colors for the affected date (and adjacent days)
+            if ($del_date) {
+                $adj_prev = date("Y-m-d", strtotime('-1 day', strtotime($del_date)));
+                $adj_next = date("Y-m-d", strtotime('+1 day', strtotime($del_date)));
+                recalcConflicts($conn, [$adj_prev, $del_date, $adj_next]);
+            }
 
             http_response_code(200);
             echo json_encode(array('status' => true, 'message' => 'ลบสำเร็จ'));
@@ -28,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($act == 'batch_insert') {
             $assignments = $data->assignments;
             $insertCount = 0;
+            $warnings = array();
 
             // Step 1: Group assignments by ven_date, sorted by vu_order
             $byDate = array();
@@ -90,6 +181,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $q_chk->execute();
                     if ($q_chk->rowCount() > 0) continue;
 
+                    // Check conflict — all duty types
+                    $item_warning = '';
+                    $item_color = $color;
+                    {
+                        $ven_date_u1 = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
+                        $ven_date_d1 = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
+                        $sql_cf = "SELECT v.*, p.fname, p.name, p.sname FROM ven AS v
+                                   INNER JOIN `profile` AS p ON p.user_id = v.user_id
+                                   WHERE v.user_id = :user_id AND v.ven_date >= :d1 AND v.ven_date <= :u1 AND (v.status = 1 OR v.status = 2)";
+                        $q_cf = $conn->prepare($sql_cf);
+                        $q_cf->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+                        $q_cf->bindParam(':d1', $ven_date_d1);
+                        $q_cf->bindParam(':u1', $ven_date_u1);
+                        $q_cf->execute();
+                        foreach ($q_cf->fetchAll(PDO::FETCH_OBJ) as $ru) {
+                            $u_name = $ru->fname . $ru->name . ' ' . $ru->sname;
+                            // วันเดียวกัน ต่างประเภทเวร
+                            if ($ru->ven_date == $ven_date && $ru->vns_id != $vns_id) {
+                                $item_warning = $u_name . ' มีเวรวันเดียวกัน (' . $ru->u_role . ')';
+                                $item_color = '#ff0000';
+                            }
+                            if ($DN == 'กลางวัน' && $ru->ven_date == $ven_date_d1 && $ru->DN == 'กลางคืน') {
+                                $item_warning = $u_name . ' มีเวรกลางคืนวันก่อนหน้า';
+                                $item_color = '#ff0000';
+                            }
+                            if ($DN == 'กลางคืน' && $ru->ven_date == $ven_date_u1 && $ru->DN == 'กลางวัน') {
+                                $item_warning = $u_name . ' มีเวรกลางวันวันถัดไป';
+                                $item_color = '#ff0000';
+                            }
+                            if ($ru->ven_date == $ven_date && $ru->DN == 'กลางวัน' && strpos($ven_name, 'หมายจับ-ค้น') !== false && $DN == 'กลางคืน') {
+                                $item_warning = $u_name . ' มีเวรกลางวันในวันเดียวกัน';
+                                $item_color = '#ff0000';
+                            }
+                        }
+                        if ($item_warning) {
+                            $warnings[] = $item_warning;
+                            $color = $item_color;
+                        }
+                    }
+
                     // Assign ven_time based on vu_order directly
                     $hours = ($DN == 'กลางคืน') ? 16 : 8;
                     $existSecDN[$DN]++;
@@ -135,8 +266,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Recalc all affected dates
+            $affected_dates = array_keys($byDate);
+            $extra_dates = [];
+            foreach ($affected_dates as $d) {
+                $extra_dates[] = date("Y-m-d", strtotime('-1 day', strtotime($d)));
+                $extra_dates[] = date("Y-m-d", strtotime('+1 day', strtotime($d)));
+            }
+            recalcConflicts($conn, array_unique(array_merge($affected_dates, $extra_dates)));
+
             http_response_code(200);
-            echo json_encode(array('status' => true, 'message' => "จัดเวรสำเร็จ $insertCount รายการ"));
+            $has_warning = count($warnings) > 0;
+            $msg = "จัดเวรสำเร็จ $insertCount รายการ";
+            if ($has_warning) {
+                $msg .= ' (มีข้อสังเกต: ' . implode(', ', $warnings) . ')';
+            }
+            echo json_encode(array(
+                'status'   => true,
+                'icon'     => $has_warning ? 'warning' : 'success',
+                'message'  => $msg,
+                'warnings' => $warnings
+            ));
 
             exit;
         }
@@ -165,40 +315,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $query_check->bindParam(':vc_id', $vc_id);
             $query_check->execute();
             if ($query_check->rowCount() > 0) {
-                echo json_encode(array('status' => true, 'message' => 'มีรายชื่อนี้อยู่แล้ว (ข้ามการเพิ่ม)'));
+                echo json_encode(array('status' => true, 'icon' => 'warning', 'message' => 'มีรายชื่อนี้อยู่แล้ว (ข้ามการเพิ่ม)'));
                 exit;
             }
 
-            // Check for conflicts with OTHER duties
-            if ($price > 0 && ($DN == 'กลางวัน' || $DN == 'กลางคืน')) {
-                $ven_date_u1 = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
-                $ven_date_d1 = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
+            $warning_msg = ''; // Initialize before conflict checks
 
-                $sql_VU = "SELECT v.*, p.fname, p.name, p.sname 
-                            FROM ven AS v
-                            INNER JOIN `profile` AS p ON p.user_id = v.user_id
-                            WHERE v.user_id = :user_id AND v.ven_date >= :ven_date_d1 AND v.ven_date <= :ven_date_u1 AND (v.status = 1 OR v.status = 2)";
-                $query_VU = $conn->prepare($sql_VU);
-                $query_VU->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-                $query_VU->bindParam(':ven_date_d1', $ven_date_d1);
-                $query_VU->bindParam(':ven_date_u1', $ven_date_u1);
-                $query_VU->execute();
-                $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
+            // Check for conflicts — all duty types
+            $ven_date_u1 = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
+            $ven_date_d1 = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
 
-                if ($query_VU->rowCount()) {
-                    foreach ($res_VU as $ru) {
-                        if ($DN == 'กลางวัน' && $ru->ven_date == $ven_date_d1 && $ru->DN == 'กลางคืน') {
-                            $warning_msg = $ru->fname.$ru->name.' '.$ru->sname. "\n มีเวรกลางคืน วันก่อนหน้า";
-                            $color = '#ff0000';
-                        }
-                        if ($DN == 'กลางคืน' && $ru->ven_date == $ven_date_u1 && $ru->DN == 'กลางวัน') {
-                            $warning_msg = $ru->fname.$ru->name.' '.$ru->sname. "\n มีเวรกลางวัน วันถัดไป";
-                            $color = '#ff0000';
-                        }
-                        if ($ru->ven_date == $ven_date && $ru->DN == 'กลางวัน' && strpos($ven_name, 'หมายจับ-ค้น') !== false && $DN == 'กลางคืน') {
-                            $warning_msg = $ru->fname.$ru->name.' '.$ru->sname. "\n มีเวรกลางวัน ในวันเดียวกัน";
-                            $color = '#ff0000';
-                        }
+            $sql_VU = "SELECT v.*, p.fname, p.name, p.sname 
+                        FROM ven AS v
+                        INNER JOIN `profile` AS p ON p.user_id = v.user_id
+                        WHERE v.user_id = :user_id 
+                          AND v.ven_date >= :ven_date_d1 AND v.ven_date <= :ven_date_u1 
+                          AND (v.status = 1 OR v.status = 2)";
+            $query_VU = $conn->prepare($sql_VU);
+            $query_VU->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+            $query_VU->bindParam(':ven_date_d1', $ven_date_d1);
+            $query_VU->bindParam(':ven_date_u1', $ven_date_u1);
+            $query_VU->execute();
+            $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
+
+            if ($query_VU->rowCount()) {
+                foreach ($res_VU as $ru) {
+                    $u_display = $ru->fname . $ru->name . ' ' . $ru->sname;
+                    // มีเวรวันเดียวกัน (ต่างประเภทเวร)
+                    if ($ru->ven_date == $ven_date && $ru->vns_id != $vns_id) {
+                        $warning_msg = $u_display . ' มีเวรวันเดียวกัน (' . $ru->u_role . ')';
+                        $color = '#ff0000';
+                    }
+                    // กลางวัน แต่มีกลางคืนวันก่อนหน้า
+                    if ($DN == 'กลางวัน' && $ru->ven_date == $ven_date_d1 && $ru->DN == 'กลางคืน') {
+                        $warning_msg = $u_display . ' มีเวรกลางคืนวันก่อนหน้า';
+                        $color = '#ff0000';
+                    }
+                    // กลางคืน แต่มีกลางวันวันถัดไป
+                    if ($DN == 'กลางคืน' && $ru->ven_date == $ven_date_u1 && $ru->DN == 'กลางวัน') {
+                        $warning_msg = $u_display . ' มีเวรกลางวันวันถัดไป';
+                        $color = '#ff0000';
+                    }
+                    // หมายจับ-ค้น กลางคืน + มีเวรกลางวันวันเดียวกัน
+                    if ($ru->ven_date == $ven_date && $ru->DN == 'กลางวัน' && strpos($ven_name, 'หมายจับ-ค้น') !== false && $DN == 'กลางคืน') {
+                        $warning_msg = $u_display . ' มีเวรกลางวันในวันเดียวกัน';
+                        $color = '#ff0000';
                     }
                 }
             }
@@ -270,7 +431,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $icon = $warning_msg ? 'warning' : 'success';
-            $msg  = $warning_msg ? "เพิ่มสำเร็จ (มีข้อสังเกต)" : 'เพิ่มสำเร็จ';
+            $msg  = $warning_msg ? 'เพิ่มสำเร็จ (มีข้อสังเกต): ' . trim($warning_msg) : 'เพิ่มสำเร็จ';
+
+            // Recalc colors for this date and adjacent days
+            $adj_prev = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
+            $adj_next = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
+            recalcConflicts($conn, [$adj_prev, $ven_date, $adj_next]);
 
             http_response_code(200);
             echo json_encode(array('status' => true, 'message' => $msg, 'icon' => $icon, 'warning' => $warning_msg));
