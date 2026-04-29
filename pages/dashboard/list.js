@@ -13,7 +13,30 @@ createApp({
             ssid: '',
             selected_types: [],
             months: ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"],
-            years: []
+            years: [],
+            // Modal states
+            data_event: { 
+                uid: 5555,
+                uname: '',
+                ven_date: '',
+                ven_time: '',
+                DN: '',
+                ven_month: '',
+                ven_com_id: '',
+                st: '',
+            },
+            my_v: [],
+            vh: [],
+            d_now: '',
+            users: [],
+            ch_v1: '',
+            ch_v2: '',
+            act: 'a',
+            ch_a: false,
+            ch_b: false,
+            user_id2: '',
+            u_name2: '',
+            u_img2: '',
         }
     },
     computed: {
@@ -172,7 +195,125 @@ createApp({
             } else {
                 this.selected_types.push(key);
             }
-        }
+        },
+        showDetail(id) {
+            console.log("Opening detail for event ID:", id);
+            if (this.ssid != '') {
+                this.isLoading = true;
+                axios.post('../../server/dashboard/get_ven.php', { id: id, uid: this.ssid })
+                    .then(response => {
+                        if (response.data.status) {
+                            this.data_event = response.data.respJSON
+                            this.my_v = response.data.my_v
+                            this.vh = response.data.vh
+                            this.d_now = response.data.d_now
+                            this.users = response.data.users
+                            this.$refs['show_modal'].click()
+                        } else {
+                            this.alert('warning', response.data.message, 0)
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    })
+                    .finally(() => {
+                        this.isLoading = false;
+                    });
+            } else {
+                this.alert('warning', 'กรุณา Login..', 0)
+            }
+        },
+        change_a(my_v_index) {
+            this.act = 'a'
+            this.$refs.show_modal_b.click()
+            this.ch_v1 = this.my_v[my_v_index]
+            this.ch_v2 = this.data_event
+        },
+        change_b(uid, u_name, img) {
+            this.act = 'b'
+            this.ch_v1 = this.data_event
+            this.user_id2 = uid
+            this.u_name2 = u_name
+            this.u_img2 = img
+            this.$refs.show_modal_b.click()
+        },
+        change_save() {
+            this.isLoading = true;
+            axios.post('../../server/dashboard/change_save.php', { ch_v1: this.ch_v1, ch_v2: this.ch_v2 })
+                .then(response => {
+                    if (response.data.status) {
+                        this.fetchData()
+                        this.$refs.close_modal.click()
+                        this.$refs.close_modal_b.click()
+                        this.alert('success', response.data.message, 1000)
+                        window.open('../history/index.php', '_self')
+                    } else {
+                        this.alert('warning', response.data.message, 0)
+                    }
+                    this.act = 'a'
+                })
+                .catch(error => {
+                    this.alert('warning', error, 0)
+                    console.log(error);
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                })
+        },
+        change_save_bb() {
+            this.isLoading = true;
+            axios.post('../../server/dashboard/change_save_b.php', { ch_v1: this.ch_v1, user_id2: this.user_id2, u_name2: this.u_name2 })
+                .then(response => {
+                    if (response.data.status) {
+                        this.fetchData()
+                        this.$refs.close_modal.click()
+                        this.$refs.close_modal_b.click()
+                        this.alert('success', response.data.message, 1000)
+                        window.open('../history/index.php', '_self')
+                    } else {
+                        this.alert('warning', response.data.message, 0)
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                })
+        },
+        close_m() {
+            this.ch_a = false
+            this.ch_b = false
+        },
+        close_m_b() {
+            this.$refs.close_modal.click()
+        },
+        report_jk(ven_date, DN) {
+            this.isLoading = true;
+            axios.post('../../server/dashboard/report_jk.php', { ven_date: ven_date, DN: DN })
+                .then(response => {
+                    if (response.data.status) {
+                        this.alert("success", response.data.message, 1000)
+                        window.open('../../uploads/ven_jk.docx', '_blank')
+                    } else {
+                        this.alert("warning", response.data.message, 0)
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                })
+                .finally(() => {
+                    this.isLoading = false;
+                })
+        },
+        alert(icon, message, timer = 0) {
+            swal.fire({
+                icon: icon,
+                title: message,
+                showConfirmButton: false,
+                timer: timer
+            });
+        },
     },
     watch: {
         filterMyDuty(newVal) {

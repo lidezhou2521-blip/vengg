@@ -16,7 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        
 
         $res_g = array();
-        $sql = "SELECT ven_com.*, ven_name.name AS vn_name, ven_name.DN 
+        $sql = "SELECT ven_com.*, ven_name.name AS vn_name, ven_name.DN,
+                (SELECT COUNT(*) FROM ven WHERE ven.ven_com_idb = ven_com.id AND ven.status = 2) as pending_count,
+                (SELECT COUNT(*) FROM ven WHERE ven.ven_com_idb = ven_com.id AND ven.status = 1) as active_count
                 FROM ven_com
                 LEFT JOIN ven_name ON ven_com.vn_id = ven_name.id 
                 ORDER BY ven_month DESC, CAST(ven_com_num AS DECIMAL) 
@@ -47,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'ven_com_date' => $rs->ven_com_date,
                         'ven_com_date_th' => DateThai_full($rs->ven_com_date),
                         'ven_name'  => $rs->vn_name,
-                        'status'    => $rs->status
+                        'status'    => $rs->status,
+                        'pending_count' => $rs->pending_count,
+                        'active_count' => $rs->active_count
                     ));  
                 }              
             }

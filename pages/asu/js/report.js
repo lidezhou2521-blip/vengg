@@ -20,7 +20,11 @@ Vue.createApp({
   mounted(){
     this.url_base = window.location.protocol + '//' + window.location.host;
     this.url_base_app = window.location.protocol + '//' + window.location.host + '/adminphp/';
-    // this.get_ven_all()
+    
+    // Set current month as default (YYYY-MM)
+    const now = new Date();
+    this.sel_month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
     this.get_ven_coms()
   },
   watch: {
@@ -199,6 +203,38 @@ Vue.createApp({
               console.log(error);
           });
     }, 
+    print5_district(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report5_district.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print5",print);
+                window.open('./report-print5.php?v=' + Date.now(), '_blank')
+              }else{
+                this.alert('warning',response.data.message,0)
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+          });
+    }, 
+    print5_release(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report5_release.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print5",print);
+                window.open('./report-print5.php?v=' + Date.now(), '_blank')
+              }else{
+                this.alert('warning',response.data.message,0)
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+          });
+    }, 
     print6(vcid, ven_month){
       let excluded = this.getExcludedDuties(ven_month);
       axios.post('../../server/asu/report/report6.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
@@ -316,6 +352,38 @@ Vue.createApp({
               .then(response => {
                   if (response.data.status) { 
                     this.alert('success',response.data.message,1500)
+                    this.get_ven_coms()
+                  }else{
+                    this.alert('warning',response.data.message,2500)
+                  }
+              })
+              .catch(function (error) {
+                  console.log(error);
+              })
+              .finally(() => {
+                this.isLoading = false;
+              })
+        }
+      })
+    },
+    unapprove_ven(ven_com_idb){
+      Swal.fire({
+        title: 'ยกเลิกการอนุมัติเวร?',
+        text: "คุณต้องการคืนค่าสถานะเวรในคำสั่งนี้ให้เป็น 'รออนุมัติ' ใช่หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ใช่, ยกเลิกอนุมัติ',
+        cancelButtonText: 'ปิด'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.isLoading = true;
+          axios.post('../../server/asu/report/unapprove_ven.php',{ven_com_id:ven_com_idb})    
+              .then(response => {
+                  if (response.data.status) { 
+                    this.alert('success',response.data.message,1500)
+                    this.get_ven_coms()
                   }else{
                     this.alert('warning',response.data.message,2500)
                   }
