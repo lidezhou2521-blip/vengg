@@ -32,6 +32,7 @@ $data = json_decode(file_get_contents("php://input"));
 // $DATE_MONTH = '2022-11';
 // $DATE_MONTH = date('Y-m', strtotime('2022-10'));
 $ven_com_id = date($data->ven_com_id);
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
 
 $HOLIDAY=[];
 // http_response_code(200);
@@ -91,24 +92,32 @@ try{
 
             foreach($vens as $ven){
                 if($user->user_id == $ven->user_id){
-                    $price_one = $ven->price;
-                    $price += $ven->price;
-                    
-                    if(ck_holiday($ven->ven_date,$HLD )){
-                        $holiday ++;
-                    }else{
-                        $weekdays ++;
+                    $is_excluded = false;
+                    foreach ($excluded_duties as $ex) {
+                        if ($ex->user_id == $ven->user_id && $ex->day == (int)date('j', strtotime($ven->ven_date)) && $ex->ven_name == $ven->ven_name) {
+                            $is_excluded = true;
+                            break;
+                        }
                     }
-                    if($ven->DN == 'กลางวัน'){
-                        $time = ' เวลา 08.30 - 16.30 น.';
+
+                    if (!$is_excluded) {
+                        $price_one = $ven->price;
+                        $price += $ven->price;
+                        
+                        if(ck_holiday($ven->ven_date,$HLD )){
+                            $holiday ++;
+                        }else{
+                            $weekdays ++;
+                        }
+                        if($ven->DN == 'กลางวัน'){
+                            $time = ' เวลา 08.30 - 16.30 น.';
+                        }
+                        if($ven->DN == 'กลางคืน'){
+                            $time = ' เวลา 16.30 - 08.30 น.';
+                        }
+                        array_push($work_day,$ven->ven_date);
                     }
-                    if($ven->DN == 'กลางคืน'){
-                        $time = ' เวลา 16.30 - 08.30 น.';
-                    }
-                    array_push($work_day,$ven->ven_date);
                 }
-
-
             }
 
            

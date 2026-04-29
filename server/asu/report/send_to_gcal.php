@@ -37,12 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     
     try{
-        
-        $sql = "UPDATE ven SET status = 1 WHERE status = 2 AND ven_com_idb = :ven_com_idb";
-        $query = $conn->prepare($sql);   
-        $query->bindParam(':ven_com_idb', $_ven_com_id, PDO::PARAM_STR);   
-        $query->execute();
-
+        // UPDATE status moved to approve_ven.php
 
         $sql = "SELECT v.*, p.fname, p.name, p.sname 
                 FROM ven AS v

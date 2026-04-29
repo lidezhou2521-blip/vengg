@@ -3,7 +3,21 @@ session_start();
 error_reporting(E_ALL);
 // error_reporting(0);
 
-define("__GOOGLE_CALENDAR__", false);           // true : false
+// โหลดตั้งค่า Google Calendar จากไฟล์ JSON (เพื่อให้จัดการง่าย ไม่ต้องแก้โค้ด)
+$gcal_config_path = __DIR__ . '/gcal_config.json';
+$gcal_enabled = false;
+$gcal_api_url = "http://127.0.0.1/service/google/calendar/calendar.php";
+if (file_exists($gcal_config_path)) {
+    $gcal_config = json_decode(file_get_contents($gcal_config_path), true);
+    if (isset($gcal_config['gcal_enabled'])) {
+        $gcal_enabled = $gcal_config['gcal_enabled'];
+    }
+    if (isset($gcal_config['api_url']) && !empty($gcal_config['api_url'])) {
+        $gcal_api_url = $gcal_config['api_url'];
+    }
+}
+define("__GOOGLE_CALENDAR__", $gcal_enabled);
+define("__GOOGLE_CALENDAR_URL__", $gcal_api_url);
 define("__LOGIN_BY__", "");                     // vengg : gdms
 define("__VERSION__", "V 2.1.9");               // version
 

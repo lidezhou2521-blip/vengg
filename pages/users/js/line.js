@@ -9,11 +9,13 @@ Vue.createApp({
       line_form: '',
       act: 'insert',
       isLoading: false,
+      channel_access_token: ''
     }
   },
   mounted() {
     this.url_base = window.location.protocol + '//' + window.location.host;
     this.get_lines();
+    this.load_line_config();
   },
   watch: {
     q() {
@@ -21,6 +23,28 @@ Vue.createApp({
     }
   },
   methods: {
+    load_line_config() {
+      axios.get('../../server/users/line/update_line_config.php')
+        .then(response => {
+          if (response.data.status) {
+            this.channel_access_token = response.data.channel_access_token;
+          }
+        })
+        .catch(error => console.log(error));
+    },
+    save_line_config() {
+      this.isLoading = true;
+      axios.post('../../server/users/line/update_line_config.php', { channel_access_token: this.channel_access_token })
+        .then(response => {
+          if (response.data.status) {
+            this.alert('success', response.data.message, 1500);
+          } else {
+            this.alert('error', response.data.message, 0);
+          }
+        })
+        .catch(error => console.log(error))
+        .finally(() => this.isLoading = false);
+    },
     get_lines() {
       this.isLoading = true;
       axios.post('../../server/users/line/get_lines.php')

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ตรวจสอบเวร FNU</title>
+  <style>
+    [v-cloak] > * { display:none; }
+    [v-cloak]::before { content:"กำลังโหลด..."; display:block; text-align:center; padding:60px; font-size:18px; color:#666; }
+
+    @font-face { font-family:Sarabun; src:url(dist/fonts/Sarabun/Sarabun-Regular.ttf); }
+    * { font-family:Sarabun,sans-serif; box-sizing:border-box; margin:0; padding:0; }
+    body { background:#f8f9fa; min-height:100vh; }
+
+    /* ======= TOPBAR ======= */
+    .topbar {
+      position:sticky; top:0; z-index:200;
+      background:#fff;
+      color:#212529; padding:10px 18px;
+      display:flex; align-items:center; gap:10px;
+      box-shadow:0 1px 6px rgba(0,0,0,0.1);
+      border-bottom:2px solid #dee2e6;
+    }
+    .topbar h1 { font-size:17px; font-weight:700; color:#212529; }
+    .topbar-sub { font-size:11px; color:#6c757d; margin-bottom:1px; }
+    .month-badge {
+      background:#e9ecef; border:1px solid #ced4da;
+      border-radius:20px; padding:4px 14px; font-size:13px; font-weight:600; color:#495057;
+    }
+    .total-badge {
+      margin-left:auto; background:#28a745;
+      border-radius:20px; padding:6px 18px;
+      font-size:15px; font-weight:700; color:#fff;
+      box-shadow:0 2px 6px rgba(40,167,69,0.25);
+    }
+    .close-btn {
+      background:#f8f9fa; border:1px solid #ced4da;
+      color:#495057; padding:6px 14px; border-radius:6px;
+      cursor:pointer; font-size:13px; text-decoration:none; transition:background .2s;
+    }
+    .close-btn:hover { background:#e9ecef; color:#212529; }
+
+    /* ======= LEGEND ======= */
+    .legend-bar {
+      padding:7px 18px; background:#fff; border-bottom:1px solid #dee2e6;
+      display:flex; gap:16px; font-size:12px; color:#495057;
+      align-items:center; flex-wrap:wrap;
+    }
+    .legend-item { display:flex; align-items:center; gap:5px; }
+    .l-chip {
+      width:22px; height:22px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:700;
+    }
+    .saved-msg { margin-left:auto; color:#28a745; font-size:12px; }
+
+    /* ======= SEARCH ======= */
+    .searchbar {
+      padding:9px 18px; background:#fff; border-bottom:1px solid #dee2e6;
+      display:flex; align-items:center; gap:10px;
+    }
+    .searchbar input {
+      flex:1; border:1px solid #ced4da; border-radius:6px;
+      padding:7px 13px; font-size:13px; outline:none; transition:border .2s;
+    }
+    .searchbar input:focus { border-color:#007bff; box-shadow:0 0 0 2px rgba(0,123,255,0.15); }
+    .count-info { font-size:12px; color:#6c757d; white-space:nowrap; }
+
+    /* ======= TABLE WRAPPER ======= */
+    .table-wrap { overflow-x:auto; padding:12px 14px; }
+
+    /* ======= MAIN TABLE ======= */
+    .duty-table {
+      border-collapse:separate; border-spacing:0;
+      background:#fff; border-radius:8px;
+      overflow:hidden;
+      box-shadow:0 1px 4px rgba(0,0,0,0.08);
+      border:1px solid #dee2e6;
+      min-width:100%;
+    }
+
+    /* Header row: day numbers */
+    .duty-table thead tr.day-header th {
+      background:#343a40;
+      color:#fff; text-align:center;
+      font-size:11px; font-weight:700;
+      padding:6px 0; min-width:32px; width:32px;
+    }
+    .duty-table thead tr.day-header th.col-name { 
+      text-align:left; padding:6px 12px; 
+      min-width:110px; width:110px;
+    }
+    .duty-table thead tr.day-header th.col-type { 
+      text-align:left; padding:6px 8px; 
+      min-width:90px; width:90px;
+    }
+    .duty-table thead tr.day-header th.col-total { 
+      text-align:right; padding:6px 10px; 
+      min-width:80px; width:80px;
+    }
+
+    /* Person separator */
+    .person-sep td {
+      background:#e9ecef;
+      font-size:13px; font-weight:700; color:#343a40;
+      padding:7px 12px;
+      border-top:2px solid #ced4da;
+    }
+    .person-sep td .ptotal {
+      float:right; font-size:13px; color:#155724;
+      background:#d4edda; border-radius:10px; padding:2px 10px;
+    }
+    .person-sep td .pcounts {
+      display:inline-flex; gap:6px; margin-left:10px; vertical-align:middle;
+    }
+    .pcount-chip { font-size:11px; border-radius:8px; padding:1px 7px; font-weight:600; }
+    .pcount-day { background:#fff3cd; color:#856404; }
+    .pcount-night { background:#cce5ff; color:#004085; }
+
+    /* Duty rows */
+    .duty-table tbody tr.duty-row:hover td { background:#f8f9fa !important; }
+    .duty-table tbody tr.duty-row td {
+      padding:0; vertical-align:middle; border-bottom:1px solid #f0f0f0;
+    }
+    .duty-table tbody tr.duty-row td.col-name {
+      padding:6px 12px; font-size:12px; color:#495057; font-weight:600;
+      border-right:1px solid #dee2e6;
+    }
+    .duty-table tbody tr.duty-row td.col-type {
+      padding:4px 8px; font-size:11px; color:#555;
+      border-right:1px solid #dee2e6;
+      white-space:nowrap;
+    }
+    .dn-tag { font-size:10px; border-radius:4px; padding:2px 5px; display:inline-block; white-space:nowrap; }
+    .dn-day { background:#fff3cd; color:#856404; }
+    .dn-night { background:#cce5ff; color:#004085; }
+
+    .duty-table tbody tr.duty-row td.col-day {
+      width:32px; min-width:32px; max-width:32px;
+      text-align:center; border-right:1px solid #f0f0f0; padding:3px 0;
+    }
+    .duty-table tbody tr.duty-row td.col-total {
+      padding:4px 10px; text-align:right; font-size:12px;
+      font-weight:700; color:#155724; white-space:nowrap;
+      border-left:1px solid #dee2e6;
+    }
+    .duty-table tbody tr.duty-row td.col-total.zero { color:#adb5bd; }
+
+    /* Day chips */
+    .chip {
+      width:26px; height:26px; border-radius:50%;
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:10px; font-weight:700; cursor:pointer;
+      transition:all .15s; border:2px solid transparent;
+      user-select:none;
+    }
+    .chip.active {
+      background:#007bff; color:#fff;
+      box-shadow:0 1px 4px rgba(0,123,255,0.35);
+    }
+    .chip.active:hover { background:#dc3545; }
+    .chip.excluded {
+      background:#fff5f5; color:#dc3545; border-color:#f5c6cb;
+    }
+    .chip.excluded:hover { background:#dc3545; color:#fff; border-color:#dc3545; }
+
+    /* Grand total footer */
+    .grand-row td {
+      background:#343a40; color:#fff;
+      font-size:14px; font-weight:700;
+      padding:10px 12px; text-align:right;
+      position:sticky; bottom:0;
+    }
+    .grand-row td.grand-label { text-align:left; }
+
+    /* EMPTY */
+    .empty-state { text-align:center; padding:80px 20px; color:#adb5bd; }
+
+    @media print {
+      .topbar, .legend-bar, .searchbar { display:none !important; }
+      body { background:#fff; }
+      .table-wrap { padding:0; }
+      @page { size:landscape; margin:0.5cm; }
+    }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-sub">FNU — รายละเอียดการเงิน</div>
+      <h1>✅ ตรวจสอบเวร</h1>
+    </div>
+    <span class="month-badge" v-if="ven_month_th">📅 {{ven_month_th}}</span>
+    <span class="total-badge">฿ {{fmtNum(price_all)}}</span>
+    <a href="javascript:window.print()" class="close-btn" style="background:rgba(255,255,255,0.1);">🖨️ พิมพ์</a>
+    <a href="javascript:window.close()" class="close-btn">✕ ปิด</a>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend-bar">
+    <strong style="color:#004d40;">คลิกวันที่:</strong>
+    <span class="legend-item">
+      <span class="l-chip" style="background:#00897b;color:#fff;">9</span> เบิกเงินอยู่ → คลิกกากบาท
+    </span>
+    <span class="legend-item">
+      <span class="l-chip" style="background:#ffebee;color:#c62828;border:2px solid #ef9a9a;">✕</span> กากบาท → คลิกยกเลิก
+    </span>
+    <span class="saved-msg" v-if="lastSaved">✓ บันทึกแล้ว {{lastSaved}}</span>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="searchbar">
+    <input v-model="search" placeholder="🔍 ค้นหาชื่อ..." />
+    <span class="count-info">แสดง {{filteredPersons.length}} / {{persons.length}} คน</span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap" v-if="persons.length > 0">
+    <table class="duty-table">
+      <thead>
+        <tr class="day-header">
+          <th class="col-name">ชื่อ-สกุล</th>
+          <th class="col-type">ประเภท</th>
+          <th v-for="d in days_in_month" :key="d" :style="d===today_day?'background:#1b5e20':''">{{d}}</th>
+          <th class="col-total">รวม (บาท)</th>
+        </tr>
+      </thead>
+      <tbody v-for="(person, pIdx) in filteredPersons" :key="pIdx">
+        <!-- Person separator row -->
+        <tr class="person-sep">
+          <td :colspan="3 + days_in_month">
+            <span>{{person.name}}</span>
+            <span class="pcounts">
+              <span class="pcount-chip pcount-day" v-if="person.D_c > 0">☀️ {{person.D_c}}</span>
+              <span class="pcount-chip pcount-night" v-if="person.N_c > 0">🌙 {{person.N_c}}</span>
+            </span>
+            <span class="ptotal">฿ {{fmtNum(person.price_sum)}}</span>
+          </td>
+        </tr>
+        <!-- Duty rows -->
+        <tr class="duty-row" v-for="(duty, dIdx) in person.duty_groups" :key="pIdx+'-'+dIdx">
+          <td class="col-name">
+            <template v-if="dIdx===0">{{person.name}}</template>
+          </td>
+          <td class="col-type">
+            <span class="dn-tag" :class="duty.DN==='กลางวัน'?'dn-day':'dn-night'">
+              {{duty.DN==='กลางวัน'?'☀️':'🌙'}} {{fmtDutyName(duty.ven_name)}}
+            </span>
+          </td>
+          <!-- Day columns 1..days_in_month -->
+          <td class="col-day" v-for="d in days_in_month" :key="d">
+            <span v-if="duty.active_days.includes(d)"
+                  class="chip active"
+                  :title="'วันที่ '+d+' — คลิกกากบาท'"
+                  @click="toggleDay(person, duty, d)">
+              {{pad(d)}}
+            </span>
+            <span v-else-if="duty.excluded_days.includes(d)"
+                  class="chip excluded"
+                  :title="'วันที่ '+d+' กากบาท — คลิกยกเลิก'"
+                  @click="toggleDay(person, duty, d)">
+              ✕
+            </span>
+          </td>
+          <td class="col-total" :class="{zero: duty.total===0}">
+            {{fmtNum(duty.total)}}
+          </td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="grand-row">
+          <td class="grand-label" :colspan="2 + days_in_month">💰 รวมเงินทั้งหมด</td>
+          <td>฿ {{fmtNum(price_all)}}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="empty-state" v-else-if="!loading">
+    <div style="font-size:52px; margin-bottom:16px;">📋</div>
+    <p>ไม่พบข้อมูล กรุณาเปิดหน้านี้จากปุ่ม "ตรวจสอบเวร" ในหน้า FNU</p>
+  </div>
+
+</div>
+
+<script src="dist/js/vue@2.6.14.js"></script>
+<script src="dist/js/axios.min.js"></script>
+<script>
+var app = new Vue({
+  el: '#app',
+  data() {
+    return {
+      persons: [],
+      price_all: 0,
+      price_all_text: '',
+      ven_month: '',
+      ven_month_th: '',
+      days_in_month: 31,
+      today_day: new Date().getDate(),
+      search: '',
+      lastSaved: '',
+      loading: true,
+    }
+  },
+  computed: {
+    filteredPersons() {
+      if (!this.search.trim()) return this.persons;
+      const q = this.search.toLowerCase();
+      return this.persons.filter(p => p.name.toLowerCase().includes(q));
+    }
+  },
+  mounted() {
+    const raw = localStorage.getItem('fnu_check_duty');
+    if (raw) {
+      const d = JSON.parse(raw);
+      this.ven_month = d.ven_month || '';
+      this.ven_month_th = d.month || '';
+      this.price_all_text = d.price_all_text || '';
+      this.days_in_month = d.days_in_month || 31;
+      this.buildPersons(d);
+    }
+    this.loading = false;
+  },
+  methods: {
+    pad(n) { return n < 10 ? '0' + n : '' + n; },
+    fmtNum(n) {
+      return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+    fmtDutyName(name) {
+      if (!name) return '—';
+      const map = {
+        'ศาลแขวงและพิจารณาคำร้องขอปล่อยชั่วคราว': 'เวรศาลแขวงฯ',
+        'เวรเปิดทำการพิจารณาคำร้องขอปล่อยชั่วคราว': 'เวรฯขอปล่อยชั่วคราว',
+        'หมายจับ-ค้น': 'หมายจับ-ค้น',
+        'ฟื้นฟู/ตรวจสอบการจับ': 'ฟื้นฟูฯ',
+      };
+      if (map[name]) return map[name];
+      // ถ้ายาวเกิน 10 ตัดให้สั้น
+      return name.length > 10 ? name.substring(0, 9) + 'ฯ' : name;
+    },
+    buildPersons(apiData) {
+      const excMap = this.loadExcluded(apiData.ven_month);
+      const persons = [];
+      let priceTotal = 0;
+
+      (apiData.datas || []).forEach(person => {
+        const dutyMap = {};
+
+        (person.vens || []).forEach(v => {
+          const day = parseInt(v.ven_date.split('-')[2]);
+          const ven_name = v.ven_name || '—';
+          const key = ven_name + '|' + v.DN;
+          const price = parseFloat(v.price) || 0;
+
+          if (!dutyMap[key]) {
+            dutyMap[key] = {
+              ven_name: ven_name,
+              DN: v.DN,
+              price_per: price,
+              active_days: [],
+              excluded_days: [],
+              total: 0,
+            };
+          }
+
+          const exKey = person.uid + '|' + ven_name;
+          const is_ex = excMap[exKey] && excMap[exKey].includes(day);
+
+          if (is_ex) {
+            if (!dutyMap[key].excluded_days.includes(day))
+              dutyMap[key].excluded_days.push(day);
+          } else {
+            if (!dutyMap[key].active_days.includes(day)) {
+              dutyMap[key].active_days.push(day);
+              dutyMap[key].total += price;
+            }
+          }
+        });
+
+        // Sort days
+        const duty_groups = Object.values(dutyMap);
+        duty_groups.forEach(d => {
+          d.active_days.sort((a,b) => a-b);
+          d.excluded_days.sort((a,b) => a-b);
+        });
+
+        const price_sum = duty_groups.reduce((s,d) => s + d.total, 0);
+        const D_c = duty_groups.filter(d=>d.DN==='กลางวัน').reduce((s,d)=>s+d.active_days.length,0);
+        const N_c = duty_groups.filter(d=>d.DN==='กลางคืน').reduce((s,d)=>s+d.active_days.length,0);
+
+        persons.push({ uid: person.uid, name: person.name, D_c, N_c, price_sum, duty_groups });
+        priceTotal += price_sum;
+      });
+
+      this.persons = persons;
+      this.price_all = priceTotal;
+    },
+    loadExcluded(month) {
+      if (!month) return {};
+      const stored = localStorage.getItem('excluded_duties_' + month);
+      if (!stored) return {};
+      const arr = JSON.parse(stored);
+      const map = {};
+      arr.forEach(ex => {
+        const k = ex.user_id + '|' + ex.ven_name;
+        if (!map[k]) map[k] = [];
+        map[k].push(ex.day);
+      });
+      return map;
+    },
+    toggleDay(person, duty, day) {
+      if (duty.active_days.includes(day)) {
+        duty.active_days = duty.active_days.filter(d => d !== day);
+        duty.excluded_days.push(day);
+        duty.excluded_days.sort((a,b) => a-b);
+        duty.total -= duty.price_per;
+        person.price_sum -= duty.price_per;
+        this.price_all -= duty.price_per;
+      } else if (duty.excluded_days.includes(day)) {
+        duty.excluded_days = duty.excluded_days.filter(d => d !== day);
+        duty.active_days.push(day);
+        duty.active_days.sort((a,b) => a-b);
+        duty.total += duty.price_per;
+        person.price_sum += duty.price_per;
+        this.price_all += duty.price_per;
+      }
+      this.saveExcluded();
+    },
+    saveExcluded() {
+      const raw = localStorage.getItem('fnu_check_duty');
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      const month = d.ven_month;
+      if (!month) return;
+
+      const excluded = [];
+      this.persons.forEach(person => {
+        person.duty_groups.forEach(duty => {
+          (duty.excluded_days || []).forEach(day => {
+            excluded.push({ user_id: person.uid, ven_name: duty.ven_name, day });
+          });
+        });
+      });
+      localStorage.setItem('excluded_duties_' + month, JSON.stringify(excluded));
+
+      const now = new Date();
+      this.lastSaved = [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map(x => x.toString().padStart(2,'0')).join(':');
+    }
+  }
+});
+</script>
+</body>
+</html>

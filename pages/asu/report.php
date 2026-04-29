@@ -91,44 +91,46 @@ require_once('../../server/authen.php');
                             </div>
                             <div class="col col-12">
                                 <template v-for='cvg in ven_coms_g'>
-                                <div class="card" v-if="sel_month === '' || sel_month === cvg.ven_month">
-                                    <div class="card-body">
+                                    <div class="card" v-if="sel_month === '' || sel_month === cvg.ven_month">
+                                        <div class="card-body">
 
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="2" class="text-start">
-                                                        เวรเดือน {{cvg.ven_month_th}}
-                                                        <button class="btn btn-info btn-sm ms-2" @click="print_master(cvg.ven_month)">สรุปรายเดือน (รูป5)</button>
-                                                        <button class="btn btn-success btn-sm ms-2" @click="print_groups(cvg.ven_month)">แยกกลุ่มงาน (รูป1-4)</button>
-                                                        <button class="btn btn-dark btn-sm ms-2" @click="print_single(cvg.ven_month, 'หมายจับ-ค้น')">สรุปหมายจับ (เดี่ยว)</button>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody v-for="vc in ven_coms">
-                                                <tr v-if="vc.ven_month == cvg.ven_month">
-                                                    <td>
-                                                        เลขคำสั่งที่ {{vc.ven_com_num}} | ลงวันที่ {{vc.ven_com_date_th}} | {{vc.ven_com_name}} ({{vc.ven_name}})
-                                                        <button class="btn btn-danger btn-sm me-2" @click="uptogcal(vc.id)">เผยแพร่</button>
-                                                        <button class="btn btn-primary btn-sm me-2" @click="print5(vc.id)">เวรแขวง+เวรปล่อยฯ</button>
-                                                        <button class="btn btn-secondary btn-sm me-2" @click="print6(vc.id)">เวรฟื้นฟู/ตรวจสอบการจับ</button>
-                                                        <button class="btn btn-info btn-sm me-2 text-white" @click="print7(vc.id)">เวรหมายจับ-ค้น</button>
-                                                        <button class="btn btn-warning btn-sm" @click="print3(cvg.ven_month)">ใบขวางสรุป</button>
-                                                    </td>
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th colspan="2" class="text-start">
+                                                            เวรเดือน {{cvg.ven_month_th}}
+                                                            <button class="btn btn-info btn-sm ms-2" @click="print_master(cvg.ven_month)">สรุปรายเดือน (รูป5)</button>
+                                                            <button class="btn btn-success btn-sm ms-2" @click="print_groups(cvg.ven_month)">แยกกลุ่มงาน</button>
+                                                            <button class="btn btn-outline-success btn-sm ms-2" @click="print_dutytype(cvg.ven_month)"><i class="bi bi-tags-fill me-1"></i>ตรวจสอบเวร</button>
+                                                            <button class="btn btn-dark btn-sm ms-2" @click="print_single(cvg.ven_month, 'หมายจับ-ค้น')">สรุปหมายค้น-จับ</button>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody v-for="vc in ven_coms">
+                                                    <tr v-if="vc.ven_month == cvg.ven_month">
+                                                        <td>
+                                                            เลขคำสั่งที่ {{vc.ven_com_num}} | ลงวันที่ {{vc.ven_com_date_th}} | {{vc.ven_com_name}} ({{vc.ven_name}})
+                                                            <button class="btn btn-success btn-sm me-2" @click="approve_ven(vc.id)"><i class="bi bi-check-circle"></i> อนุมัติเวร</button>
+                                                            <button class="btn btn-primary btn-sm me-2" @click="print5(vc.id, vc.ven_month)">เวรแขวง+เวรปล่อยฯ</button>
+                                                            <button class="btn btn-secondary btn-sm me-2" @click="print6(vc.id, vc.ven_month)">เวรฟื้นฟู/ตรวจสอบการจับ</button>
+                                                            <button class="btn btn-info btn-sm me-2 text-white" @click="print7(vc.id, vc.ven_month)">เวรหมายจับ-ค้น</button>
+                                                            <button class="btn btn-warning btn-sm" @click="print3(cvg.ven_month)">ใบขวางสรุป</button>
+                                                        </td>
 
-                                                    <td class="text-end col " style="width: 250px;">
-                                                        <button v-if="vc.ven_name.includes('ตรวจสอบการจับ') || vc.ven_name.includes('ฟื้นฟู')" class="btn btn-primary btn-sm m-2" @click="print2(vc.id)">แนบท้าย({{vc.ven_name}})</button>
-                                                        <button v-if="vc.ven_name.includes('หมายจับ-ค้น')" class="btn btn-primary btn-sm m-2" @click="print(vc.id)">แนบท้าย({{vc.ven_name}})</button>
-                                                        <button v-if="vc.ven_name.includes('ผู้ตรวจ')" class="btn btn-primary btn-sm m-2" @click="print4(vc.ven_month,vc.ven_com_num,vc.ven_com_date)">แนบท้าย รักษาการณ์({{vc.ven_name}})</button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                            <tfoot>
 
-                                            </tfoot>
-                                        </table>
+                                                        <td class="text-end col " style="width: 250px;">
+                                                            <button v-if="vc.ven_name.includes('ตรวจสอบการจับ') || vc.ven_name.includes('ฟื้นฟู')" class="btn btn-primary btn-sm m-2" @click="print2(vc.id, vc.ven_month)">แนบท้าย({{vc.ven_name}})</button>
+                                                            <button v-if="vc.ven_name.includes('หมายจับ-ค้น')" class="btn btn-primary btn-sm m-2" @click="print(vc.id, vc.ven_month)">แนบท้าย({{vc.ven_name}})</button>
+                                                            <button v-if="vc.ven_name.includes('ผู้ตรวจ')" class="btn btn-primary btn-sm m-2" @click="print4(vc.ven_month,vc.ven_com_num,vc.ven_com_date)">แนบท้าย รักษาการณ์({{vc.ven_name}})</button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                                <tfoot>
+
+                                                </tfoot>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
                                 </template>
                             </div>
                         </div>

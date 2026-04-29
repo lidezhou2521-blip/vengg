@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'name' => $rs['fname'] . $rs['name'] . ' ' . $rs['sname'],
                         'dep' => $rs['dep'],
                         'img' => $img_link,
-                        'status' => $rs['status']
+                        'status' => $rs['status'],
+                        'st' => $rs['st']
                     );
 
                     $datas[] = $data;

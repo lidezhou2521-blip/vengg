@@ -33,6 +33,7 @@ $datas = array();
 //action.php
 
 $data = json_decode(file_get_contents("php://input"));
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
 
 if (isset($data->month) && !empty($data->month) && preg_match('/^\d{4}-\d{2}$/', $data->month)) {
     // รูปแบบถูกต้องและมีค่าไม่ว่าง
@@ -104,7 +105,7 @@ try{
             $ven_count   = 0;
             $price   = 0;
 
-            $sql_ven = "SELECT v.ven_date, v.ven_time, v.DN, vc.u_role, vc.ven_com_name, vc.price, v.user_id, v.ven_com_id
+            $sql_ven = "SELECT v.ven_date, v.ven_time, v.DN, v.ven_name, vc.u_role, vc.ven_com_name, vc.price, v.user_id, v.ven_com_id
                         FROM ven_com as vc 
                         INNER JOIN ven as v 
                         ON vc.id = v.ven_com_id 
@@ -115,11 +116,21 @@ try{
 
             if(count($result_ven) > 0){
                 foreach ($result_ven as $rs_ven){
-                    array_push($work_day,$rs_ven->ven_date);
-                    $price      += $rs_ven->price;
-                    $price_all  += $rs_ven->price;
-                    $weekdays++ ;
-                    $ven_count++;
+                    $is_excluded = false;
+                    foreach ($excluded_duties as $ex) {
+                        if ($ex->user_id == $rs_ven->user_id && $ex->day == (int)date('j', strtotime($rs_ven->ven_date)) && $ex->ven_name == $rs_ven->ven_name) {
+                            $is_excluded = true;
+                            break;
+                        }
+                    }
+
+                    if (!$is_excluded) {
+                        array_push($work_day,$rs_ven->ven_date);
+                        $price      += $rs_ven->price;
+                        $price_all  += $rs_ven->price;
+                        $weekdays++ ;
+                        $ven_count++;
+                    }
                 }
                         
                 array_push($datas,array(

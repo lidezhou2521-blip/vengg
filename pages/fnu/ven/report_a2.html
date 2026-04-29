@@ -196,7 +196,11 @@ td, th {
                 let url = window.location.href;
                 let params = (new URL(url)).searchParams;
                 month = params.get('month');
-                axios.post(url_base_app + '/api/report_a2.php',{month:month})
+                let excluded_duties = month ? (JSON.parse(localStorage.getItem('excluded_duties_' + month) || '[]')) : [];
+                axios.post(url_base_app + '/api/report_a2.php',{
+                    month:month,
+                    excluded_duties: excluded_duties
+                })
                     .then(response => {
                         // console.log(response.data);
                         if (response.data.status) {

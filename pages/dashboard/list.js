@@ -7,8 +7,8 @@ createApp({
             dutyTypes: [],
             isLoading: false,
             search: '',
-            filter_month: new Date().getMonth() + 1,
-            filter_year: new Date().getFullYear(),
+            filter_month: '',
+            filter_year: '',
             filterMyDuty: false,
             ssid: '',
             selected_types: [],
@@ -20,22 +20,40 @@ createApp({
         currentUserId() {
             return this.ssid;
         },
+        // All filters EXCEPT type-filter (used for badge counts)
+        filteredBySearch() {
+            let filtered = this.datas;
+            if (this.search.trim() !== '') {
+                const q = this.search.toLowerCase();
+                filtered = filtered.filter(ev => {
+                    const ep = ev.extendedProps || {};
+                    return (ev.title && ev.title.toLowerCase().includes(q)) ||
+                           (ep.u_name && ep.u_name.toLowerCase().includes(q)) ||
+                           (ep.u_role && ep.u_role.toLowerCase().includes(q)) ||
+                           (ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(q));
+                });
+            }
+            if (this.filter_month !== '') {
+                filtered = filtered.filter(ev => (new Date(ev.start).getMonth() + 1) == this.filter_month);
+            }
+            if (this.filter_year !== '') {
+                filtered = filtered.filter(ev => new Date(ev.start).getFullYear() == this.filter_year);
+            }
+            if (this.filterMyDuty && this.ssid) {
+                filtered = filtered.filter(ev => String((ev.extendedProps || {}).user_id) === String(this.ssid));
+            }
+            return filtered;
+        },
         dutyStats() {
             if (!this.dutyTypes || !Array.isArray(this.dutyTypes)) return [];
             const stats = {};
             this.dutyTypes.forEach(type => {
                 if (!type.vn_id) return;
                 const key = String(type.vn_id);
-                stats[key] = {
-                    key: key,
-                    name: type.name,
-                    u_role: type.u_role || '',
-                    color: type.color || '#cccccc',
-                    count: 0,
-                    active: this.selected_types.includes(key)
-                };
+                stats[key] = { key, name: type.name, u_role: type.u_role || '', color: type.color || '#cccccc', count: 0, active: this.selected_types.includes(key) };
             });
-            this.datas.forEach(event => {
+            // Count from filteredBySearch so badge count matches visible list
+            this.filteredBySearch.forEach(event => {
                 const ep = event.extendedProps || {};
                 if (ep.vn_id) {
                     const key = String(ep.vn_id);
@@ -45,35 +63,8 @@ createApp({
             return Object.values(stats).filter(s => s.count > 0);
         },
         filteredEvents() {
-            let filtered = this.datas;
-
-            // Search filter
-            if (this.search.trim() !== '') {
-                const q = this.search.toLowerCase();
-                filtered = filtered.filter(ev => {
-                    const ep = ev.extendedProps || {};
-                    return (ev.title && ev.title.toLowerCase().includes(q)) ||
-                        (ep.u_name && ep.u_name.toLowerCase().includes(q)) ||
-                        (ep.u_role && ep.u_role.toLowerCase().includes(q)) ||
-                        (ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(q));
-                });
-            }
-
-            // Month filter
-            if (this.filter_month !== '') {
-                filtered = filtered.filter(ev => {
-                    const d = new Date(ev.start);
-                    return (d.getMonth() + 1) == this.filter_month;
-                });
-            }
-
-            // Year filter
-            if (this.filter_year !== '') {
-                filtered = filtered.filter(ev => {
-                    const d = new Date(ev.start);
-                    return d.getFullYear() == this.filter_year;
-                });
-            }
+            // Start from pre-filtered set (search + month + year + myDuty already applied)
+            let filtered = this.filteredBySearch;
 
             // Type filter — match by vn_id (duty name level)
             if (this.selected_types.length > 0) {
@@ -81,13 +72,6 @@ createApp({
                     const ep = ev.extendedProps || {};
                     if (!ep.vn_id) return true;
                     return this.selected_types.includes(String(ep.vn_id));
-                });
-            }
-
-            // My Duty filter
-            if (this.filterMyDuty && this.ssid) {
-                filtered = filtered.filter(ev => {
-                    return String(ev.extendedProps.user_id) === String(this.ssid);
                 });
             }
 

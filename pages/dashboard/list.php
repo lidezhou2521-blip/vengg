@@ -25,14 +25,20 @@ require_once('../../server/authen.php');
             font-size: 0.75rem;
             padding: 0.35em 0.65em;
         }
-        .search-container {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 1rem 0;
-            margin-bottom: 1rem;
+        /* Match dashboard search style */
+        .search-box .input-group {
+            transition: all 0.3s ease;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid transparent !important;
+        }
+        .search-box .input-group:focus-within {
+            box-shadow: 0 0 0 0.25rem rgba(67, 94, 190, 0.25);
+            border-color: #435ebe !important;
+            background: #fff !important;
+        }
+        .search-box input:focus {
+            background: #fff !important;
         }
     </style>
 </head>
@@ -65,29 +71,18 @@ require_once('../../server/authen.php');
                 </div>
 
                 <div class="container-fluid">
-                    <!-- Filters & Search -->
+                    <!-- Filters & Search (same layout as dashboard/index.php) -->
                     <div class="card shadow-sm mb-4">
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
+                            <!-- Row 1: Search + เวรของฉัน (matches dashboard) -->
+                            <div class="row align-items-center g-3">
+                                <div class="col-md-9 search-box">
                                     <div class="input-group">
                                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
-                                        <input type="text" v-model="search" class="form-control border-start-0" placeholder="ค้นหาชื่อ, กลุ่มหน้าที่...">
+                                        <input type="text" v-model="search" class="form-control border-start-0" placeholder="ค้นหาชื่อ, ตำแหน่ง, ประเภทเวร...">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <select v-model="filter_month" class="form-select">
-                                        <option value="">ทุกเดือน</option>
-                                        <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <select v-model="filter_year" class="form-select">
-                                        <option value="">ทุกปี</option>
-                                        <option v-for="y in years" :key="y" :value="y">{{ y + 543 }}</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
                                     <button @click="filterMyDuty = !filterMyDuty" 
                                             class="btn w-100" 
                                             :class="filterMyDuty ? 'btn-primary' : 'btn-outline-primary'">
@@ -96,14 +91,30 @@ require_once('../../server/authen.php');
                                     </button>
                                 </div>
                             </div>
-                            
+
+                            <!-- Row 2: Month/Year filter (compact, list-view specific) -->
+                            <div class="row g-2 mt-2">
+                                <div class="col-md-3">
+                                    <select v-model="filter_month" class="form-select form-select-sm">
+                                        <option value="">ทุกเดือน</option>
+                                        <option v-for="(m, i) in months" :key="i" :value="i + 1">{{ m }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select v-model="filter_year" class="form-select form-select-sm">
+                                        <option value="">ทุกปี</option>
+                                        <option v-for="y in years" :key="y" :value="y">{{ y + 543 }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <!-- Duty Types Legend with Colors -->
-                            <div class="mt-4">
+                            <div class="mt-4" v-if="dutyStats.length > 0">
                                 <h6 class="mb-3 text-muted small"><i class="bi bi-tag-fill me-2"></i>เลือกแสดงตามชื่อเวร:</h6>
                                 <div class="d-flex flex-wrap gap-2">
                                     <div v-for="type in dutyStats" :key="type.key" 
                                          @click="toggleType(type.key)"
-                                         class="px-3 py-2 rounded-3 border d-flex align-items-center shadow-sm cursor-pointer"
+                                         class="px-3 py-2 rounded-3 border d-flex align-items-center shadow-sm"
                                          :style="{ 
                                              borderLeft: '5px solid ' + type.color, 
                                              backgroundColor: type.active ? '#f8fafc' : '#ffffff',

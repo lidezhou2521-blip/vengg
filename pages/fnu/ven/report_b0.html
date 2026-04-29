@@ -143,8 +143,11 @@
                 let url = window.location.href;
                 let params = (new URL(url)).searchParams;
                 ven_com_id = params.get('ven_com_id');
+                let ven_month = params.get('ven_month');
+                let excluded_duties = ven_month ? (JSON.parse(localStorage.getItem('excluded_duties_' + ven_month) || '[]')) : [];
                 axios.post(url_base_app + '/api/report_b0.php',{
-                    ven_com_id:ven_com_id
+                    ven_com_id:ven_com_id,
+                    excluded_duties: excluded_duties
                 })
                     .then(response => {
                         // console.log(response.data);

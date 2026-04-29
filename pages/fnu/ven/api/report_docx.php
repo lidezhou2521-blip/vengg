@@ -45,6 +45,8 @@ if (isset($data->month) && !empty($data->month) && preg_match('/^\d{4}-\d{2}$/',
     exit;
 }
 
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
+
 
 $HOLIDAY=[];
 
@@ -91,6 +93,18 @@ try{
             foreach($vens as $ven){
                 
                 if($user->user_id == $ven->user_id){
+                    // ตรวจสอบว่าถูกกากบาทไหม
+                    $is_excluded = false;
+                    foreach ($excluded_duties as $ex) {
+                        if ($ex->user_id == $ven->user_id
+                            && $ex->day == (int)date('j', strtotime($ven->ven_date))
+                            && $ex->ven_name == $ven->ven_name) {
+                            $is_excluded = true;
+                            break;
+                        }
+                    }
+                    if ($is_excluded) continue; // ข้ามวันที่กากบาท
+
                     $price_one = $ven->price;
                     $price += $ven->price;
                     

@@ -62,9 +62,10 @@ Vue.createApp({
       })
     },
 
-    print(vcid){
+    print(vcid, ven_month){
       // this.isLoading = true
-      axios.post('../../server/asu/report/report.php',{vcid:vcid})    
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report.php',{vcid:vcid, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -79,9 +80,10 @@ Vue.createApp({
           });
 
     }, 
-    print2(vcid){
+    print2(vcid, ven_month){
       // this.isLoading = true
-      axios.post('../../server/asu/report/report2.php',{vcid:vcid})    
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report2.php',{vcid:vcid, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -97,7 +99,8 @@ Vue.createApp({
 
     }, 
     print3(ven_month){
-      axios.post('../../server/asu/report/report3.php',{ven_month:ven_month})    
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report3.php',{ven_month:ven_month, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -162,10 +165,27 @@ Vue.createApp({
           .catch(function (error) {
               console.log(error);
           });
+    }, 
+    print_dutytype(ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report_dutytype.php',{ven_month:ven_month, excluded_duties: excluded})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print_dutytype",print);
+                window.open('./report-print-dutytype.php','_blank')
+              }else{
+                this.alert('warning',response.data.message,0)
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+          });
 
     }, 
-    print5(vcid){
-      axios.post('../../server/asu/report/report5.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end})    
+    print5(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report5.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -179,8 +199,9 @@ Vue.createApp({
               console.log(error);
           });
     }, 
-    print6(vcid){
-      axios.post('../../server/asu/report/report6.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end})    
+    print6(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report6.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -194,8 +215,9 @@ Vue.createApp({
               console.log(error);
           });
     },
-    print7(vcid){
-      axios.post('../../server/asu/report/report7.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end})    
+    print7(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report7.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -210,7 +232,8 @@ Vue.createApp({
           });
     },
     print_single(ven_month, search_name){
-      axios.post('../../server/asu/report/report_single.php',{ven_month:ven_month, search_name:search_name})    
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report_single.php',{ven_month:ven_month, search_name:search_name, excluded_duties: excluded})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
@@ -276,6 +299,36 @@ Vue.createApp({
                   }
     })
     }, 
+    approve_ven(ven_com_idb){
+      Swal.fire({
+        title: 'ยืนยันการอนุมัติเวร?',
+        text: "คุณต้องการเปลี่ยนสถานะเวรในคำสั่งนี้ให้เป็น 'ใช้งานจริง' ใช่หรือไม่?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'ใช่, อนุมัติเลย',
+        cancelButtonText: 'ยกเลิก'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.isLoading = true;
+          axios.post('../../server/asu/report/approve_ven.php',{ven_com_id:ven_com_idb})    
+              .then(response => {
+                  if (response.data.status) { 
+                    this.alert('success',response.data.message,1500)
+                  }else{
+                    this.alert('warning',response.data.message,2500)
+                  }
+              })
+              .catch(function (error) {
+                  console.log(error);
+              })
+              .finally(() => {
+                this.isLoading = false;
+              })
+        }
+      })
+    },
     uptogcal(ven_com_idb){
       Swal.fire({
         title: 'Are you sure?',
@@ -346,6 +399,12 @@ Vue.createApp({
       timer: timer
     });
   },  
+    // ดึง excluded_duties จาก localStorage ตามเดือน
+    getExcludedDuties(ven_month) {
+      if (!ven_month) return [];
+      let stored = localStorage.getItem('excluded_duties_' + ven_month);
+      return stored ? JSON.parse(stored) : [];
+    },
     
     
 

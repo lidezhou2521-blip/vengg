@@ -33,6 +33,8 @@ Vue.createApp({
         val:''
       },
 
+      dragIndex: null,
+      dragOverIndex: null,
       isLoading : false,
   }
   },
@@ -395,6 +397,60 @@ Vue.createApp({
           })
         }
       }) 
+    },
+    dragStart(event, index) {
+      this.dragIndex = index;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', index);
+      // Optional: change opacity or styling on drag start
+      setTimeout(() => event.target.classList.add('dragging'), 0);
+    },
+    dragOver(event, index) {
+      this.dragOverIndex = index;
+    },
+    dragLeave(event) {
+      this.dragOverIndex = null;
+    },
+    drop(event, index) {
+      this.dragOverIndex = null;
+      document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+      
+      if (this.dragIndex === null || this.dragIndex === index) return;
+      
+      const draggedItem = this.datas[this.dragIndex];
+      this.datas.splice(this.dragIndex, 1);
+      this.datas.splice(index, 0, draggedItem);
+      
+      this.datas.forEach((item, i) => {
+        item.st = i + 1;
+      });
+      
+      this.saveOrder();
+      this.dragIndex = null;
+    },
+    saveOrder() {
+      this.isLoading = true;
+      const updates = this.datas.map(d => ({
+        uid: d.uid,
+        st: d.st
+      }));
+      
+      axios.post('../../server/users/user_reorder.php', { updates: updates })
+        .then(response => {
+          if (response.data.status) {
+             let icon = 'success';
+             this.alert(icon, response.data.message, 1000);
+          } else {
+             let icon = 'error';
+             this.alert(icon, response.data.message, 0);
+          }
+        })
+        .catch(error => {
+           console.log(error);
+        })
+        .finally(() => {
+           this.isLoading = false;
+        });
     },
   },
   

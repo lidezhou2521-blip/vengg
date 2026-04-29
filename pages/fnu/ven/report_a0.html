@@ -215,7 +215,10 @@ thead
                 let url = window.location.href;
                 let params = (new URL(url)).searchParams;
                 let ven_com_id = params.get('ven_com_id');
-                axios.post('./api/report_a0.php',{ven_com_id:ven_com_id})
+                // ดึง ven_month จาก query string ถ้ามี (ส่งมาจาก index.html)
+                let ven_month = params.get('ven_month') || '';
+                let excluded_duties = ven_month ? (JSON.parse(localStorage.getItem('excluded_duties_' + ven_month) || '[]')) : [];
+                axios.post('./api/report_a0.php',{ven_com_id:ven_com_id, excluded_duties: excluded_duties})
                     .then(response => {
                         // console.log(response.data);
                         if (response.data.status) {

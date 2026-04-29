@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         }
                                         if($st_urlo == 'ผู้พิพากษา'){
                                             array_push($u_namej,$name );
-                                        }elseif($rs->u_role == 'จนท'){
+                                        }else{
                                             array_push($u_name,$name);
                                             array_push($cmt,$rs->u_role);
                                         }

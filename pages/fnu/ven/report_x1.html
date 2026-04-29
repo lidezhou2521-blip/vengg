@@ -81,7 +81,7 @@
                             </tr>
                             <tr>
                                 <td colspan="5" class="text-end">
-                                    รวมเงินจ่ายทั้งสิ้น(ตัวอักษร) {{datas.price_all_text}}</td>
+                                    รวมเงินจ่ายทั้งสิ้น(ตัวอักษร) {{price_all_text}}</td>
                                 <td class="text-end double_line" style="border-bottom:5px double #336699;">
                                     {{formatCurrency(price_all)}}</td>
                                 <td class="text-end"></td>
@@ -121,6 +121,7 @@
             return {
                 datas: [],
                 price_all: '',
+                price_all_text: '',
                 DN1:0,
                 DN1_PRICE_DAY:3700,
                 DN2:0,
@@ -139,14 +140,18 @@
                 let url = window.location.href;
                 let params = (new URL(url)).searchParams;
                 month = params.get('month');
+                // ส่ง excluded_duties จาก localStorage ด้วย
+                let excluded_duties = month ? (JSON.parse(localStorage.getItem('excluded_duties_' + month) || '[]')) : [];
                 axios.post('./api/index_get_data_all.php',{
-                    month:month
+                    month:month,
+                    excluded_duties: excluded_duties
                 })
                     .then(response => {
                         // console.log(response.data);
                         if (response.data.status) {
                             this.datas = response.data.datas;
                             this.price_all = response.data.price_all;
+                            this.price_all_text = response.data.price_all_text;
                             this.month = response.data.month;
                             this.DN1 = response.data.day_num * this.DN1_PRICE_DAY;
                             this.DN2 = response.data.holiday_num * this.DN2_PRICE_DAY;

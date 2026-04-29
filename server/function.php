@@ -190,36 +190,76 @@ function thainumDigit($num){
 
 
 
-function sendLine($sToken,$sMessage){
-    if(isInternetAvailable('https://notify-bot.line.me')){
-        $access_token = $sToken;
-        $message = $sMessage;
-      
-        $data = array(
-          'message' => $message
-        );
-      
-        $options = array(
-          'http' => array(
-            'method' => 'POST',
-            'header' => "Authorization: Bearer {$access_token}\r\n" .
-                        "Content-Type: application/x-www-form-urlencoded\r\n",
-            'content' => http_build_query($data),
-          ),
-        );
-      
-        $context = stream_context_create($options);
-        $response = @file_get_contents('https://notify-api.line.me/api/notify', false, $context);
-        $response_decoded = json_decode($response, true);
-      
-        if ($response_decoded && isset($response_decoded['status']) && $response_decoded['status'] == 200) {
-          // notification was sent successfully
-          return true;
-        } else {
-          // an error occurred
-          return isset($response_decoded['message']) ? $response_decoded['message'] : 'Unknown error';
+function sendLine($sToken, $sMessage){
+    // โหลด Channel Access Token
+    $line_config_path = __DIR__ . '/line_config.json';
+    $channel_access_token = '';
+    
+    if (file_exists($line_config_path)) {
+        $config = json_decode(file_get_contents($line_config_path), true);
+        if (isset($config['channel_access_token'])) {
+            $channel_access_token = trim($config['channel_access_token']);
         }
-    }    
+    }
+    
+    if (!empty($channel_access_token)) {
+        // --- ระบบใหม่ (LINE Messaging API) ---
+        $url = 'https://api.line.me/v2/bot/message/push';
+        $data = array(
+            'to' => $sToken, // User ID หรือ Group ID
+            'messages' => array(
+                array(
+                    'type' => 'text',
+                    'text' => $sMessage
+                )
+            )
+        );
+        $options = array(
+            'http' => array(
+                'method' => 'POST',
+                'header' => "Content-Type: application/json\r\n" .
+                            "Authorization: Bearer {$channel_access_token}\r\n",
+                'content' => json_encode($data)
+            )
+        );
+        $context = stream_context_create($options);
+        $response = @file_get_contents($url, false, $context);
+        
+        if ($response !== false) {
+            return true;
+        } else {
+            return 'LINE Messaging API Error: ' . print_r($error_get_last(), true);
+        }
+    } else {
+        // --- ระบบเก่า (LINE Notify) เผื่อบางที่ยังมีวิธีใช้งานได้ ---
+        if(isInternetAvailable('https://notify-bot.line.me')){
+            $access_token = $sToken;
+            $message = $sMessage;
+          
+            $data = array(
+              'message' => $message
+            );
+          
+            $options = array(
+              'http' => array(
+                'method' => 'POST',
+                'header' => "Authorization: Bearer {$access_token}\r\n" .
+                            "Content-Type: application/x-www-form-urlencoded\r\n",
+                'content' => http_build_query($data),
+              ),
+            );
+          
+            $context = stream_context_create($options);
+            $response = @file_get_contents('https://notify-api.line.me/api/notify', false, $context);
+            $response_decoded = json_decode($response, true);
+          
+            if ($response_decoded && isset($response_decoded['status']) && $response_decoded['status'] == 200) {
+              return true;
+            } else {
+              return isset($response_decoded['message']) ? $response_decoded['message'] : 'Unknown error';
+            }
+        }    
+    }
 }
 
 function gcal_insert($name,$start,$desc=null){
@@ -261,7 +301,7 @@ function gcal_update($gcal_id,$name,$desc=null,$colerId=1){
 }
 
 function gcal_send_date($message_data){
-    $url = 'http://127.0.0.1/service/google/calendar/calendar.php';
+    $url = defined('__GOOGLE_CALENDAR_URL__') ? __GOOGLE_CALENDAR_URL__ : 'http://127.0.0.1/service/google/calendar/calendar.php';
     $headers = array('Method: POST', 'Content-type: application/json');
     $message_data = json_encode($message_data);
 

@@ -172,12 +172,11 @@ function recalcConflicts($conn, array $dates) {
                     $vu_order    = isset($a->vu_order) ? (int)$a->vu_order : 999;
 
                     // Check duplicate
-                    $sql_check = "SELECT id FROM ven WHERE user_id = :user_id AND ven_date = :ven_date AND vns_id = :vns_id AND ven_com_idb = :vc_id AND (status = 1 OR status = 2)";
+                    $sql_check = "SELECT id FROM ven WHERE user_id = :user_id AND ven_date = :ven_date AND vns_id = :vns_id AND (status = 1 OR status = 2)";
                     $q_chk = $conn->prepare($sql_check);
                     $q_chk->bindParam(':user_id', $user_id);
                     $q_chk->bindParam(':ven_date', $ven_date);
                     $q_chk->bindParam(':vns_id', $vns_id);
-                    $q_chk->bindParam(':vc_id', $vc_id);
                     $q_chk->execute();
                     if ($q_chk->rowCount() > 0) continue;
 
@@ -307,12 +306,11 @@ function recalcConflicts($conn, array $dates) {
             $color      = $data->color;
 
             // Check if already assigned to THIS specific duty
-            $sql_check = "SELECT id FROM ven WHERE user_id = :user_id AND ven_date = :ven_date AND vns_id = :vns_id AND ven_com_idb = :vc_id AND (status = 1 OR status = 2)";
+            $sql_check = "SELECT id FROM ven WHERE user_id = :user_id AND ven_date = :ven_date AND vns_id = :vns_id AND (status = 1 OR status = 2)";
             $query_check = $conn->prepare($sql_check);
             $query_check->bindParam(':user_id', $user_id);
             $query_check->bindParam(':ven_date', $ven_date);
             $query_check->bindParam(':vns_id', $vns_id);
-            $query_check->bindParam(':vc_id', $vc_id);
             $query_check->execute();
             if ($query_check->rowCount() > 0) {
                 echo json_encode(array('status' => true, 'icon' => 'warning', 'message' => 'มีรายชื่อนี้อยู่แล้ว (ข้ามการเพิ่ม)'));

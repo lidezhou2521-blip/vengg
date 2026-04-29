@@ -29,6 +29,7 @@ $datas = array();
 
 $data = json_decode(file_get_contents("php://input"));
 $ven_com_id = date($data->ven_com_id);
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
 
 $HOLIDAY = [];
 // http_response_code(200);
@@ -104,6 +105,18 @@ try {
             foreach ($vens as $ven) {
                 if ($user->user_id == $ven->user_id) {
                     if ($ven->price > 0) {
+                        // ตรวจสอบว่าถูกกากบาทไหม
+                        $is_excluded = false;
+                        foreach ($excluded_duties as $ex) {
+                            if ($ex->user_id == $ven->user_id
+                                && $ex->day == (int)date('j', strtotime($ven->ven_date))
+                                && $ex->ven_name == $ven->ven_name) {
+                                $is_excluded = true;
+                                break;
+                            }
+                        }
+                        if ($is_excluded) continue; // ข้ามวันที่กากบาท
+
                         $price_one = $ven->price;
                         $price += $ven->price;
 

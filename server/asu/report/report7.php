@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $vcid = $data->vcid;
     $date_start = isset($data->date_start) ? $data->date_start : '';
     $date_end = isset($data->date_end) ? $data->date_end : '';
+    $excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
     $datas = array();
 
     try{
@@ -78,6 +79,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             foreach($result as $rs){
                 if($rs->ven_date == $date){
+                    // ตรวจสอบว่าถูกกากบาท (excluded) ไหม
+                    $is_excluded = false;
+                    foreach ($excluded_duties as $ex) {
+                        if ($ex->user_id == $rs->user_id
+                            && $ex->day == (int)date('j', strtotime($rs->ven_date))
+                            && $ex->ven_name == $rs->ven_name) {
+                            $is_excluded = true;
+                            break;
+                        }
+                    }
+                    if ($is_excluded) continue; // ข้ามวันที่กากบาท
+
                     $name = $rs->fname . $rs->name . ' ' . $rs->sname;
                     $vt = substr($rs->ven_time, 0, 5); // HH:MM
                     

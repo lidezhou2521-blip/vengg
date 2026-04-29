@@ -59,6 +59,7 @@ Vue.createApp({
       label_message: '<--กรุณาเลือกคำสั่ง',
       isLoading: false,
       show_sidebar: true,
+      calendar: null,
       
       duty_types: [],
       selected_types: [],
@@ -71,12 +72,12 @@ Vue.createApp({
         if (!this.duty_types || !Array.isArray(this.duty_types)) return [];
         const stats = {};
         this.duty_types.forEach(type => {
-          if (type && type.name && type.u_role) {
-            const key = type.name + '|' + type.u_role;
+          if (type && type.vn_id) {
+            const key = String(type.vn_id);
             stats[key] = {
               key: key,
               name: type.name,
-              u_role: type.u_role,
+              u_role: type.u_role || '',
               color: type.color || '#cccccc',
               count: 0,
               active: this.selected_types.includes(key)
@@ -85,33 +86,41 @@ Vue.createApp({
         });
         if (this.datas && Array.isArray(this.datas)) {
           this.datas.forEach(event => {
-            const type = this.duty_types.find(t => t.color === event.backgroundColor);
-            if (type) {
-              const key = type.name + '|' + type.u_role;
+            if (event && event.extendedProps && event.extendedProps.vn_id) {
+              const key = String(event.extendedProps.vn_id);
               if (stats[key]) stats[key].count++;
             }
           });
         }
         return Object.values(stats).filter(s => s.count > 0);
-      } catch (e) { return []; }
+      } catch (e) { console.error('dutyStats error:', e); return []; }
     },
     filteredEvents() {
+      if (!this.datas) return [];
       let filtered = this.datas;
+
+      // Filter by selected types — match by vn_id
       if (this.selected_types.length > 0) {
         filtered = filtered.filter(ev => {
-          const type = this.duty_types.find(t => t.color === ev.backgroundColor);
-          if (!type) return true;
-          const key = type.name + '|' + type.u_role;
-          return this.selected_types.includes(key);
+          const ep = ev.extendedProps || {};
+          if (!ep.vn_id) return true; // keep if unknown
+          return this.selected_types.includes(String(ep.vn_id));
         });
       }
+
+      // Filter by search query — check extendedProps fields
       if (this.search_query && this.search_query.trim() !== '') {
         const query = this.search_query.toLowerCase();
         filtered = filtered.filter(ev => {
-          return (ev.title && ev.title.toLowerCase().includes(query)) ||
-                 (ev.u_role && ev.u_role.toLowerCase().includes(query));
+          const titleMatch = ev.title && ev.title.toLowerCase().includes(query);
+          const ep = ev.extendedProps || {};
+          const uNameMatch = ep.u_name && ep.u_name.toLowerCase().includes(query);
+          const uRoleMatch = ep.u_role && ep.u_role.toLowerCase().includes(query);
+          const venComMatch = ep.ven_com_name && ep.ven_com_name.toLowerCase().includes(query);
+          return titleMatch || uNameMatch || uRoleMatch || venComMatch;
         });
       }
+
       return filtered;
     }
   },
@@ -158,6 +167,30 @@ Vue.createApp({
         this.selected_types.push(key);
       }
     },
+    open_check_duty() {
+      // ดึง ven_month ปัจจุบันจาก calendar หรือ this.ven_month
+      let month = this.ven_month;
+      if (this.calendar) {
+        const d = this.calendar.getDate();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        month = y + '-' + m;
+      }
+      let excluded = JSON.parse(localStorage.getItem('excluded_duties_' + month) || '[]');
+      axios.post('../../server/asu/report/report_dutytype.php', { ven_month: month, excluded_duties: excluded })
+        .then(response => {
+          if (response.data.status) {
+            localStorage.setItem('print_dutytype', JSON.stringify(response.data));
+            window.open('./report-check-duty.php', '_blank');
+          } else {
+            this.alert('warning', response.data.message || 'ไม่พบข้อมูล', 3000);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          this.alert('warning', 'เกิดข้อผิดพลาดในการโหลดข้อมูล', 0);
+        });
+    },
     // get_ven_names(){
     //   axios.post('../../server/asu/ven_set/get_ven_names.php')
     //     .then(response => {
@@ -197,6 +230,12 @@ Vue.createApp({
       this.vc_index = ''
       this.vns_index = ''
       this.profiles = []
+      this.profiles_filtered = []
+      // Destroy old calendar so cal_render uses new ven_month
+      if (this.calendar) {
+        this.calendar.destroy();
+        this.calendar = null;
+      }
       this.get_ven_coms()
       this.cal_render()
 
@@ -251,13 +290,27 @@ Vue.createApp({
 
     cal_render() {
       var calendarEl = this.$refs['calendar'];
-      var calendar = new FullCalendar.Calendar(calendarEl, {
+      let currentDate = this.ven_month;
+      if (this.calendar) {
+        currentDate = this.calendar.getDate();
+        this.calendar.destroy();
+      }
+      this.calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        initialDate: this.ven_month,
+        initialDate: currentDate,
         firstDay: 1,
         height: 1200,
         locale: 'th',
         events: this.filteredEvents,
+        eventContent: function(arg) {
+            let html = '<div class="fc-event-main-inner" style="display:flex; justify-content:space-between; align-items:center; width:100%; overflow:hidden;">';
+            html += '<span style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display:block;">' + arg.event.title + '</span>';
+            if (arg.event.extendedProps && arg.event.extendedProps.vc_count > 1) {
+                html += '<span class="badge bg-danger rounded-pill" style="font-size: 0.7em; margin-left: 2px; padding: 2px 4px; line-height: 1;">' + arg.event.extendedProps.vc_count + '</span>';
+            }
+            html += '</div>';
+            return { html: html };
+        },
         eventClick: (info) => {
           // console.log(info.event.id +' '+info.event.title)
           // console.log(info.event.extendedProps)
@@ -331,7 +384,7 @@ Vue.createApp({
             }
         }
       });
-      calendar.render();
+      this.calendar.render();
     },
 
     cal_click(id) {
@@ -426,8 +479,8 @@ Vue.createApp({
             
             if (this.selected_types.length === 0) {
               this.duty_types.forEach(type => {
-                const key = type.name + '|' + type.u_role;
-                if (!this.selected_types.includes(key)) {
+                const key = String(type.vn_id);
+                if (key && key !== 'undefined' && !this.selected_types.includes(key)) {
                   this.selected_types.push(key);
                 }
               });

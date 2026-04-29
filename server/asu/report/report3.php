@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $ven_month = $data->ven_month;
+    $excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
     
     $datas = array();
 
@@ -80,6 +81,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach($ven_date_arr as $date){
                 foreach($res_ven as $rv){
                     if($date == $rv->ven_date){
+                        // ตรวจสอบว่าถูกกากบาทไหม
+                        $is_excluded = false;
+                        foreach ($excluded_duties as $ex) {
+                            if ($ex->user_id == $rv->user_id
+                                && $ex->day == (int)date('j', strtotime($rv->ven_date))
+                                && $ex->ven_name == $rv->ven_name) {
+                                $is_excluded = true;
+                                break;
+                            }
+                        }
+                        if ($is_excluded) continue; // ข้ามวันที่กากบาท
 
                         array_push($u_name_arr,array(
                             'ven_date'  => $date,

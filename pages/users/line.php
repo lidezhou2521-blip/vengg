@@ -35,21 +35,41 @@ require_once('../../server/authen.php');
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-body">
-                                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-
-                                            <div class="row ">
-                                                <div class="col-md-10 mx-auto">
-                                                    <div class="input-group">
-                                                        <input class="form-control border rounded-pill" type="search" value="search" v-model="q" placeholder="ค้นหา" id="example-search-input">
+                                                <div class="row mb-4">
+                                                    <div class="col-md-12">
+                                                        <div class="alert alert-info">
+                                                            <h5 class="alert-heading"><i class="bi bi-info-circle"></i> ประกาศอัปเดตระบบ LINE</h5>
+                                                            <p>เนื่องจากระบบ LINE Notify เดิมได้ถูกยกเลิกการให้บริการ (สิ้นสุดมี.ค. 2025) ระบบจึงได้อัปเกรดเป็น <b>LINE Messaging API</b> แทน<br>
+                                                            การตั้งค่าใหม่จะต้องใช้ <b>Channel Access Token</b> เป็นตัวกลางหลัก และใช้ <b>User ID</b> หรือ <b>Group ID</b> เป็นปลายทางสำหรับผู้รับ</p>
+                                                        </div>
+                                                        <div class="card border border-primary shadow-sm">
+                                                            <div class="card-header bg-primary text-white pb-2">
+                                                                <h5 class="card-title text-white mb-0"><i class="bi bi-gear-fill"></i> ตั้งค่า LINE Channel Access Token (Global)</h5>
+                                                            </div>
+                                                            <div class="card-body pt-3">
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold">Channel Access Token (Long-lived)</label>
+                                                                    <textarea class="form-control" v-model="channel_access_token" rows="2" placeholder="ใส่ Channel Access Token จาก LINE Developers ที่นี่..."></textarea>
+                                                                    <div class="form-text text-muted">Token นี้จะถูกใช้งานเป็นบอทหลักในการส่งข้อความ (หากไม่ใส่ ระบบจะพยายามใช้ LINE Notify แบบเดิมซึ่งอาจจะไม่ทำงานแล้ว)</div>
+                                                                </div>
+                                                                <button class="btn btn-primary" @click="save_line_config"><i class="bi bi-save"></i> บันทึก Token หลัก</button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            <div>
-                                                <button class="btn btn-success btn-md" @click="line_insert()">เพิ่ม</button>
-
-                                            </div>
-                                        </div>
+                                                <hr>
+                                                <h5 class="mb-3"><i class="bi bi-people-fill"></i> จัดการผู้รับแจ้งเตือน (ปลายทาง)</h5>
+                                                
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-8">
+                                                        <div class="input-group">
+                                                            <input class="form-control border rounded-pill" type="search" value="search" v-model="q" placeholder="ค้นหาชื่อผู้รับ" id="example-search-input">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 text-end">
+                                                        <button class="btn btn-success btn-md" @click="line_insert()"><i class="bi bi-plus-circle"></i> เพิ่มปลายทางใหม่</button>
+                                                    </div>
+                                                </div>
                                         <table class="table table-striped">
                                             <thead>
                                                 <tr>
@@ -120,15 +140,14 @@ require_once('../../server/authen.php');
 
                                     <div class="row">
                                         <div class="col-12 mb-3">
-                                            <label for="username1" class="form-label">username</label>
-                                            <input type="text" class="form-control" id="username1" aria-describedby="emailHelp" v-model="line_form.name">
-                                            <!-- <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div> -->
+                                            <label for="username1" class="form-label fw-bold">ชื่อกลุ่ม/บุคคล (อ้างอิง)</label>
+                                            <input type="text" class="form-control" id="username1" v-model="line_form.name" placeholder="เช่น แจ้งเตือนผู้พิพากษา">
                                         </div>
                                         <div class="col-12 mb-3">
-                                            <label for="exampleInputPassword1" class="form-label">token</label>
-                                            <input type="text" class="form-control" id="example1" v-model="line_form.token">
+                                            <label for="example1" class="form-label fw-bold">User ID / Group ID / Room ID</label>
+                                            <input type="text" class="form-control" id="example1" v-model="line_form.token" placeholder="เช่น U4af4980629... หรือ C...">
+                                            <div class="form-text text-danger">นำมาจาก LINE Official Account (Webhook/Webhook Event) หรือ LINE Developers</div>
                                         </div>
-
                                     </div>
 
 

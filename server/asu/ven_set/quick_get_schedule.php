@@ -42,13 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     LEFT JOIN ven_name_sub AS vns ON vns.id = v.vns_id
                     LEFT JOIN ven_user AS vu ON vu.user_id = v.user_id AND vu.vns_id = v.vns_id
                     WHERE v.ven_month = :ven_month
-                        AND v.ven_com_idb = :vc_id
+                        AND v.vn_id = :vn_id
                         AND v.vns_id = :vns_id
                         AND (v.status = 1 OR v.status = 2)
                     ORDER BY v.ven_date ASC, vns.srt ASC, v.ven_time ASC";
             $query = $conn->prepare($sql);
             $query->bindParam(':ven_month', $ven_month);
-            $query->bindParam(':vc_id', $vc_id);
+            $query->bindParam(':vn_id', $vn_id);
             $query->bindParam(':vns_id', $vns_id);
             $query->execute();
             $result = $query->fetchAll(PDO::FETCH_OBJ);

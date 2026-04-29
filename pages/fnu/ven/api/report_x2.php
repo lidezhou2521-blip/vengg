@@ -17,8 +17,9 @@ $error='';
 
 $data = json_decode(file_get_contents("php://input"));
 
-// $DATE_MONTH = date("2022-12");
 $DATE_MONTH = date($data->month);
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
+
 $users = array();
 $vens = array();
 $ven_users = array();
@@ -66,23 +67,33 @@ try{
         
         foreach($vens as $ven){
             if($ven->user_id == $user->user_id && $ven->price > 0){
-                $u_all_price += $ven->price;
-                if($ven->DN == 'กลางวัน'){
-                    $D_price += $ven->price;
-                    $D_c ++;
+                $is_excluded = false;
+                foreach ($excluded_duties as $ex) {
+                    if ($ex->user_id == $ven->user_id && $ex->day == (int)date('j', strtotime($ven->ven_date)) && $ex->ven_name == $ven->ven_name) {
+                        $is_excluded = true;
+                        break;
+                    }
                 }
-                if($ven->DN == 'กลางคืน'){
-                    $N_price += $ven->price;
-                    $N_c ++ ;
-                }
-                $price_all += $ven->price;
 
-                array_push($ven_users,array(
-                    "ven_date" => $ven->ven_date,
-                    "DN" => $ven->DN,
-                    "ven_com_idb" => $ven->ven_com_idb,
-                    "price" => $ven->price,
-                ));        
+                if (!$is_excluded) {
+                    $u_all_price += $ven->price;
+                    if($ven->DN == 'กลางวัน'){
+                        $D_price += $ven->price;
+                        $D_c ++;
+                    }
+                    if($ven->DN == 'กลางคืน'){
+                        $N_price += $ven->price;
+                        $N_c ++ ;
+                    }
+                    $price_all += $ven->price;
+
+                    array_push($ven_users,array(
+                        "ven_date" => $ven->ven_date,
+                        "DN" => $ven->DN,
+                        "ven_com_idb" => $ven->ven_com_idb,
+                        "price" => $ven->price,
+                    ));
+                }
             }
         }
         

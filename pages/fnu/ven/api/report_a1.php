@@ -22,6 +22,7 @@ $datas = array();
 
 
 $data = json_decode(file_get_contents("php://input"));
+$excluded_duties = isset($data->excluded_duties) ? $data->excluded_duties : array();
 
 if (isset($data->month) && !empty($data->month) && preg_match('/^\d{4}-\d{2}$/', $data->month)) {
     // รูปแบบถูกต้องและมีค่าไม่ว่าง
@@ -84,7 +85,7 @@ try{
         foreach ($result as $rs){            
             
             // $sql_ven = "SELECT * FROM ven WHERE user_id='$rs->user_id' AND ven_month = '$DATE_MONTH' AND status='1'";
-            $sql_ven = "SELECT v.ven_date, v.ven_time, v.DN, vc.u_role, vc.ven_com_name, vc.price, v.user_id, v.ven_com_id
+            $sql_ven = "SELECT v.ven_date, v.ven_time, v.DN, v.ven_name, vc.u_role, vc.ven_com_name, vc.price, v.user_id, v.ven_com_id
                         FROM ven_com as vc 
                         INNER JOIN ven as v 
                         ON vc.id = v.ven_com_id 
@@ -110,7 +111,15 @@ try{
                 $dn_2_holiday = 0;
                 $dn_2_weekdays = 0;       
                 foreach ($result_ven as $rs_ven){     
-                    if($rs_ven->DN === 'กลางคืน'){
+                    $is_excluded = false;
+                    foreach ($excluded_duties as $ex) {
+                        if ($ex->user_id == $rs_ven->user_id && $ex->day == (int)date('j', strtotime($rs_ven->ven_date)) && $ex->ven_name == $rs_ven->ven_name) {
+                            $is_excluded = true;
+                            break;
+                        }
+                    }
+                    if (!$is_excluded) {
+                        if($rs_ven->DN === 'กลางคืน'){
                         $ven['DN1'][]   = $rs_ven->ven_date;
                         $dn_1_count     = $dn_1_count + 1;
                         $dn_1_price_day = $rs_ven->price;
@@ -123,8 +132,9 @@ try{
                         $dn_2_count     = $dn_2_count + 1;
                         $dn_2_price     = $dn_2_price + $rs_ven->price;
                         $dn_2_price_day = $rs_ven->price;
-                        $price_dn2_all  = $price_dn2_all + $rs_ven->price;
-                        ck_holiday($rs_ven->ven_date, $HLD) ? $dn_2_holiday = $dn_2_holiday + 1 : $dn_2_weekdays = $dn_2_weekdays + 1 ;                        
+                            $price_dn2_all  = $price_dn2_all + $rs_ven->price;
+                            ck_holiday($rs_ven->ven_date, $HLD) ? $dn_2_holiday = $dn_2_holiday + 1 : $dn_2_weekdays = $dn_2_weekdays + 1 ;                        
+                        }
                     }
                 }
             }else{

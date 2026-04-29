@@ -7,7 +7,21 @@ require_once('../../server/authen.php');
 
 <head>
     <?php require_once('../includes/_header.php') ?>
-    
+    <style>
+        .dragging {
+            opacity: 0.5;
+            background-color: #f8f9fa;
+        }
+        .dragging-over {
+            border-top: 2px solid #0d6efd !important;
+        }
+        .cursor-grab {
+            cursor: grab;
+        }
+        .cursor-grab:active {
+            cursor: grabbing;
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -56,7 +70,13 @@ require_once('../../server/authen.php');
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr v-for="d,index in datas">
+                                                <tr v-for="d,index in datas" 
+                                                    draggable="true" 
+                                                    @dragstart="dragStart($event, index)" 
+                                                    @dragover.prevent="dragOver($event, index)"
+                                                    @dragleave="dragLeave($event)"
+                                                    @drop="drop($event, index)"
+                                                    :class="{'dragging-over': dragOverIndex === index, 'cursor-grab': true}">
                                                     <th scope="row">{{d.st}}</th>
                                                     <th scope="row" @click="b_user_img(d.uid,index)">
                                                         <img :src="d.img" alt="Photo"  height="160">

@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $sql = "SELECT p.*
                 FROM profile AS p 
-                WHERE p.id = :uid";
+                WHERE p.user_id = :uid";
         $query = $conn->prepare($sql);
         $query->bindParam(':uid', $uid, PDO::PARAM_STR);
         $query->execute();

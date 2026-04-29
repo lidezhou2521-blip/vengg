@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dates = $query_dates->fetchAll(PDO::FETCH_ASSOC);
 
         // 2. Get all duties and user profile info
-        $sql_all = "SELECT v.ven_date, v.user_id, p.fname, p.name, p.sname, p.workgroup, p.dep
+        $sql_all = "SELECT v.ven_date, v.user_id, v.u_role, p.fname, p.name, p.sname, p.workgroup, p.dep
                     FROM ven v
                     INNER JOIN profile p ON v.user_id = p.id
                     WHERE v.ven_month = :ven_month AND (v.status = 1 OR v.status = 2)
@@ -45,11 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (!isset($groups[$wg][$row->user_id])) {
                 $groups[$wg][$row->user_id] = array(
-                    'name' => $row->fname . $row->name . ' ' . $row->sname,
-                    'dates' => array()
+                    'name'   => $row->fname . $row->name . ' ' . $row->sname,
+                    'u_role' => $row->u_role,
+                    'dates'  => array()
                 );
             }
-            $groups[$wg][$row->user_id]['dates'][] = $row->ven_date;
+            if (!in_array($row->ven_date, $groups[$wg][$row->user_id]['dates'])) {
+                $groups[$wg][$row->user_id]['dates'][] = $row->ven_date;
+            }
         }
 
         http_response_code(200);
