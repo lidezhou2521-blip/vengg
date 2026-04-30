@@ -57,6 +57,7 @@
 3. **Database Import**: สร้างฐานข้อมูล MySQL และนำเข้าไฟล์ SQL จากโฟลเดอร์ `/database`
 4. **Configuration**: 
    - ตั้งค่าการเชื่อมต่อฐานข้อมูลที่ `server/connect.php`
+   - user:admin password:admin ค่าเริ่มต้น
    - ตั้งค่า LINE Token และ Google Calendar URL ผ่านเมนู **Admin** ในระบบ
 5. **Ready to go!**: เข้าใช้งานผ่านเบราว์เซอร์ที่ `http://localhost/vengg`
 
