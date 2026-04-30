@@ -6,81 +6,93 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>report</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
     <style>
-            @font-face {
-        font-family: Sarabun;
-        src: url(../dist/fonts/Sarabun/Sarabun-Regular.ttf);
-        /* font-weight: bold; */
-    }
+        @font-face {
+            font-family: Sarabun;
+            src: url(../dist/fonts/Sarabun/Sarabun-Regular.ttf);
+            /* font-weight: bold; */
+        }
 
-* {
-   font-family: Sarabun;
-}
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
+        * {
+            font-family: Sarabun;
+        }
 
-td, th {
-  border: 1px solid #000000;
-  text-align: left;
-  padding: 8px;
-}
-.text-center{
-    text-align: center;
-}
-.text-right{
-    text-align: right;
-}
-.text-sm{
-    font-size: 10px;
-}
-.name{
-    font-size: 16px;
-    text-align: left;
-    white-space: nowrap;
-}
-.head-table{
-    font-size: 14px;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-}
-.head-top{
-    font-size: 20px;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-    margin-bottom: 15px;
-}
-/* tr:nth-child(even) {
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td,
+        th {
+            border: 1px solid #000000;
+            text-align: left;
+            padding: 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-sm {
+            font-size: 10px;
+        }
+
+        .name {
+            font-size: 16px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .head-table {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .head-top {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+            margin-bottom: 15px;
+        }
+
+        /* tr:nth-child(even) {
   background-color: #dddddd;
 } */
-.hd{
-    background-color: #dddddd;
-}
-thead
-    {
-        display: table-header-group;
-    }
-    tfoot
-    {
-        display: table-footer-group;
-    }
-@media print {
-    body {
-        size: A4;
-        font-size: 10pt;
-        margin: 8mm 4mm 4mm 8mm;
-    }
-    .no-page-break {
-        page-break-before: avoid;
-        page-break-after: avoid;
-    }
-}
-</style>
+        .hd {
+            background-color: #dddddd;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-footer-group;
+        }
+
+        @media print {
+            body {
+                size: A4;
+                font-size: 10pt;
+                margin: 8mm 4mm 4mm 8mm;
+            }
+
+            .no-page-break {
+                page-break-before: avoid;
+                page-break-after: avoid;
+            }
+        }
+    </style>
 
 </head>
 
@@ -96,12 +108,12 @@ thead
             <thead>
                 <th :colspan="datas.day_num + 17" class="text-center head-top">
                     <!-- <td colspan="31"> -->
-                        หลักฐานการจ่ายเงินค่าตอบแทนการปฏิบัติงานนอกเวลาราชการกรณีปิดทำการศาลในวันหยุด<br>
-                        ส่วนราชการ ศาลจังหวัดเบตง ประจำเดือน {{datas.month}}<br>
-                        คำสั่งศาลจังหวัดเบตง ที่ {{datas.ven_com_num}} ({{datas.ven_com_name}})
+                    หลักฐานการจ่ายเงินค่าตอบแทนการปฏิบัติงานนอกเวลาราชการกรณีเปิดทำการศาลในวันหยุด<br>
+                    ส่วนราชการ ศาลจังหวัดเบตง ประจำเดือน {{datas.month}}<br>
+                    คำสั่งศาลจังหวัดเบตง ที่ {{datas.ven_com_num}} ({{datas.ven_com_name}})
                     <!-- </td> -->
                 </th>
-                <tr >
+                <tr>
                     <td rowspan="2" class="head-table">ลำดับ</td>
                     <td rowspan="2" class="head-table">ชื่อ</td>
                     <td rowspan="2" class="head-table">อัตราค่า<br>ตอบแทน</td>
@@ -122,7 +134,7 @@ thead
                     <td class="head-table">ชั่วโมง</td>
                 </tr>
             </thead>
-           
+
             <tr v-for="data,index in datas.datas">
                 <td class="text-center">{{index + 1}}</td>
                 <td class="name">
@@ -130,13 +142,13 @@ thead
                 </td>
                 <td class="text-center">{{data.price_one}}</td>
                 <td v-for="d,index in datas.day" v-bind:style="{ 'background-color': ck_holiday(d)}" class="head-table">
-                       
+
                     <div v-for="wd in data.work_day">
                         <!-- {{d}}:{{wd}} -->
-                        <div v-if="d === wd" >
+                        <div v-if="d === wd">
                             &check;
                         </div>
-                    </div>                        
+                    </div>
                 </td>
                 <td class="head-table">
                     {{data.weekdays}}
@@ -145,12 +157,14 @@ thead
                     {{data.holiday}}
                 </td>
                 <td class="head-table">
-                -
+                    -
                 </td>
                 <td class="text-right">{{formatCurrency(data.price_all)}}</td>
-                <td></td><td></td><td></td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
-            
+
             <tr>
                 <td :colspan="datas.day_num + 6" class="text-right">รวมเป็นเงินทั้งสิ้น</td>
                 <td class="text-right" style="border-bottom:5px double #336699;">
@@ -158,7 +172,7 @@ thead
                 </td>
                 <td colspan="3">({{datas.price_all_text}})</td>
             </tr>
-            
+
         </table>
         <div>
             <table>
@@ -167,17 +181,17 @@ thead
                         <br><br><br>
                         ลงชื่อ.................................................ผู้จ่ายเงิน<br>
                         <br><br>
-                        
+
                     </td>
                     <td class="text-center">
                         <br><br><br>
                         ลงชื่อ.................................................ผู้อนุมัติ<br>
                         <br><br>
-                        
+
                     </td>
                 </tr>
             </table>
-            
+
         </div>
         <!-- <button @click="print">พิมพ์</button> -->
         <!-- <a :href="datas.link_download" target="_blank" rel="noopener noreferrer">Download (.docx)</a> -->
@@ -188,100 +202,100 @@ thead
     <script src="../dist/js/axios.min.js"></script>
 
     <script>
-    var url_base = window.location.protocol + '//' + window.location.host;
-    var url_base_app = window.location.protocol + '//' + window.location.host + '/fnu/ven';
-    // var url_base_now = window.location.href;
-    // console.log(url_base_now);
-    
-    // let url = window.location.href;
-    // let params = (new URL(url)).searchParams;
-    // params.get('month') 
+        var url_base = window.location.protocol + '//' + window.location.host;
+        var url_base_app = window.location.protocol + '//' + window.location.host + '/fnu/ven';
+        // var url_base_now = window.location.href;
+        // console.log(url_base_now);
 
-    var appMenu = new Vue({
-        el: '#app',
-        data() {
-            return {
-                datas: '',
-                holiday:'',
-                holiday_count:0
-            }
-        },
-        mounted: function() {
-            this.loadData();
-            
-        },
-        methods: {
-            loadData() {
-                let url = window.location.href;
-                let params = (new URL(url)).searchParams;
-                let ven_com_id = params.get('ven_com_id');
-                // ดึง ven_month จาก query string ถ้ามี (ส่งมาจาก index.html)
-                let ven_month = params.get('ven_month') || '';
-                let excluded_duties = ven_month ? (JSON.parse(localStorage.getItem('excluded_duties_' + ven_month) || '[]')) : [];
-                axios.post('./api/report_a0.php',{ven_com_id:ven_com_id, excluded_duties: excluded_duties})
-                    .then(response => {
-                        // console.log(response.data);
-                        if (response.data.status) {
-                            this.datas = response.data;
-                            this.holiday = response.data.holiday;
-                            // console.log(this.datas);
-                            // Toast.fire({
-                            //     icon: 'success',
-                            //     title: ' Ok.'
-                            // });
-                        } else {
+        // let url = window.location.href;
+        // let params = (new URL(url)).searchParams;
+        // params.get('month') 
+
+        var appMenu = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    datas: '',
+                    holiday: '',
+                    holiday_count: 0
+                }
+            },
+            mounted: function () {
+                this.loadData();
+
+            },
+            methods: {
+                loadData() {
+                    let url = window.location.href;
+                    let params = (new URL(url)).searchParams;
+                    let ven_com_id = params.get('ven_com_id');
+                    // ดึง ven_month จาก query string ถ้ามี (ส่งมาจาก index.html)
+                    let ven_month = params.get('ven_month') || '';
+                    let excluded_duties = ven_month ? (JSON.parse(localStorage.getItem('excluded_duties_' + ven_month) || '[]')) : [];
+                    axios.post('./api/report_a0.php', { ven_com_id: ven_com_id, excluded_duties: excluded_duties })
+                        .then(response => {
+                            // console.log(response.data);
+                            if (response.data.status) {
+                                this.datas = response.data;
+                                this.holiday = response.data.holiday;
+                                // console.log(this.datas);
+                                // Toast.fire({
+                                //     icon: 'success',
+                                //     title: ' Ok.'
+                                // });
+                            } else {
+                                // Toast.fire({
+                                //     icon: 'error',
+                                //     title: 'ไม่พบข้อมูล.'
+                                // });
+                            }
+                            // console.log(response.data.message);
+                            // console.log(response.status);
+                        })
+                        .catch(function (error) {
+
+                            console.log(error);
                             // Toast.fire({
                             //     icon: 'error',
-                            //     title: 'ไม่พบข้อมูล.'
-                            // });
+                            //     title: 'เกิดข้อผิดพลาด ' + error
+                            // })
+                        });
+                },
+                ck_holiday(day) {
+                    for (let i = 0; i < this.holiday.length; i++) {
+                        if (this.holiday[i] == day) {
+
+                            return 'LightGray';
+
                         }
-                        // console.log(response.data.message);
-                        // console.log(response.status);
-                    })
-                    .catch(function(error) {
-
-                        console.log(error);
-                        // Toast.fire({
-                        //     icon: 'error',
-                        //     title: 'เกิดข้อผิดพลาด ' + error
-                        // })
-                    });
-            },
-            ck_holiday(day){
-                for (let i = 0; i < this.holiday.length; i++) {
-                    if(this.holiday[i] == day){
-                        
-                        return 'LightGray';
-
                     }
+                    return false;
+                },
+                ck_ven_work(day, data_day) {
+                    if (data_day == day) {
+                        return '/';
+                    }
+                    return false;
+                },
+                formatCurrency(number) {
+                    number = parseFloat(number);
+                    return number.toFixed(2).replace(/./g, function (c, i, a) {
+                        return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+                    });
+                },
+                day_d(d) {
+                    const rd = new Date(d);
+                    return rd.getDate();
+                },
+                print() {
+                    window.print();
                 }
-                return false;
-            },
-            ck_ven_work(day,data_day){
-                if(data_day == day){
-                    return '/';
-                }
-                return false;
-            },
-            formatCurrency(number) {
-                number = parseFloat(number);
-                return number.toFixed(2).replace(/./g, function(c, i, a) {
-                    return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
-                });
-            },
-            day_d(d){
-                const rd = new Date(d);
-                return rd.getDate();
-            },
-            print(){
-                window.print(); 
-            }
 
 
 
-        },
+            },
 
-    });
+        });
     </script>
 </body>
 

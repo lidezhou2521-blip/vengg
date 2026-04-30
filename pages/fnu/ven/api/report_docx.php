@@ -52,6 +52,11 @@ $HOLIDAY=[];
 
 try{    
     
+    // ตรวจสอบว่ามี extension zip หรือไม่ (จำเป็นสำหรับ PHPWord)
+    if (!extension_loaded('zip')) {
+        throw new Exception('เซิร์ฟเวอร์ไม่ได้เปิดใช้งาน PHP Zip Extension กรุณาเปิดใช้งานใน php.ini');
+    }
+
     $sql = "SELECT 
                 vn.`name` AS vn_name,
                 vc.*
@@ -63,7 +68,10 @@ try{
     $query->execute();
     $ven_com_nums = $query->fetchAll(PDO::FETCH_OBJ);
 
-    //ที่เพิ่มเติม
+    if (count($ven_com_nums) == 0) {
+        throw new Exception('ไม่พบข้อมูลคำสั่งเวรในเดือนที่ระบุ');
+    }
+
     $ven_com_num = $ven_com_nums[0]->ven_com_num;
     $ven_com_date = DateThai_full($ven_com_nums[0]->ven_com_date);
         
@@ -93,7 +101,23 @@ try{
             foreach($vens as $ven){
                 
                 if($user->user_id == $ven->user_id){
-                    // ตรวจสอบว่าถูกกากบาทไหม
+                    /** ตรวจสอบเงื่อนไขไม่เบิก (No Claim) */
+                    $com_id_raw = trim((string)$ven->ven_com_id);
+                    $com_id_arr = json_decode($com_id_raw, true);
+                    $com_id_empty = ($com_id_raw === '' || $com_id_raw === 'null' || $com_id_raw === '[]'
+                        || (is_array($com_id_arr) && count($com_id_arr) === 0)
+                        || $com_id_arr === null);
+                    $com_idb = trim((string)$ven->ven_com_idb);
+                    $com_num = trim((string)$ven->ven_com_num_all);
+                    
+                    $is_no_claim = (
+                        ($com_id_empty && ($com_idb === '' || $com_idb === 'null') && ($com_num === '' || $com_num === 'null'))
+                        || $ven->price <= 0
+                    );
+
+                    if ($is_no_claim) continue; // ข้ามถ้าเป็นเวรไม่เบิกจ่าย
+
+                    /** ตรวจสอบว่าถูกกากบาท (Excluded) จากหน้าเว็บไหม */
                     $is_excluded = false;
                     foreach ($excluded_duties as $ex) {
                         if ($ex->user_id == $ven->user_id
@@ -108,17 +132,15 @@ try{
                     $price_one = $ven->price;
                     $price += $ven->price;
                     
-                    // if(ck_holiday($ven->ven_date,$HLD )){
-                    //     $holiday ++;
-                    // }else{
-                    //     $weekdays ++;
-                    // }
-                    if($ven->DN == 'กลางวัน'){
-                        $time = ' เวลา 08.30 - 16.30 น.';
+                    /** แยกกลุ่มเงินตามชื่อเวร */
+                    $v_name = (string)$ven->ven_name;
+                    
+                    // กลุ่มที่ 1: เวรแขวงฯ / เวรปล่อยฯ (เปิดทำการ) -> ลงช่อง price_d
+                    if (strpos($v_name, 'แขวง') !== false || strpos($v_name, 'เปิดทำการ') !== false || strpos($v_name, 'ปล่อย') !== false) {
                         $price_d_all += $ven->price;
-                    }
-                    if($ven->DN == 'กลางคืน'){
-                        $time = ' เวลา 16.30 - 08.30 น.';
+                    } 
+                    // กลุ่มที่ 2: เวรอื่นๆ (หมายจับ, ค้น, ตรวจสอบการจับ) -> ลงช่อง price_n
+                    else {
                         $price_n_all += $ven->price;
                     }
                     array_push($work_day,$ven->ven_date);
@@ -127,7 +149,7 @@ try{
             }
            
             if($price > 0){                
-                $price_total_all += $price_one * ($weekdays + $holiday);
+                $price_total_all += $price; // แก้ไขให้ถูกต้อง
                 array_push($datas,array(
                     'user_id'=>$user->user_id,
                     'name'  => $user->fname.$user->name.' '.$user->sname,
@@ -161,52 +183,57 @@ try{
     $price_dn_all      = $price_d_all + $price_n_all;
     $price_all_thai = Num_f($price_dn_all);
     $price_all_text = Convert($price_dn_all);
-    // $datas = $datas;
 
 
     /**สร้างเอกสาร docx */
-    $templateProcessor = new TemplateProcessor('template_in.docx');//เลือกไฟล์ template ที่เราสร้างไว้
-    $templateProcessor->setValue('doc_date', $doc_date_c);//อัดตัวแปร รายตัว
-    $templateProcessor->setValue('month', $month);//อัดตัวแปร รายตัว
+    if (!file_exists('template_in.docx')) {
+        throw new Exception('ไม่พบไฟล์เทมเพลต template_in.docx');
+    }
+
+    $templateProcessor = new TemplateProcessor('template_in.docx');
+    $templateProcessor->setValue('doc_date', $doc_date_c);
+    $templateProcessor->setValue('month', $month);
     $templateProcessor->setValue('price_d', $price_d);
     $templateProcessor->setValue('price_n', $price_n_1);
     $templateProcessor->setValue('count', $count);
     $templateProcessor->setValue('price_all', $price_all_thai);
     $templateProcessor->setValue('price_all_text', $price_all_text);
     
-    //ที่เพิ่มเติม
     $templateProcessor->setValue('ven_com_nums', $ven_com_num);
     $templateProcessor->setValue('ven_com_date', $ven_com_date);
 
-    for($x = 0; $x <= count($datas); $x++){
-        $no = 'n' . $x;
-        $name = 'name_n' . $x;
-        $t3_n = 't3_n' . $x ;
-        $price_n = 'price_n' . $x;
-        
-        if(isset($datas[$x]['name'])){
-            $no_data = ($x+1) . '.';
-            $username = $datas[$x]['name'];
-            $t3_n_data = 'จำนวนเงิน';
-            
-            $price_total_thai = Num_f($datas[$x]['price_all']).'.-บาท';
-            // $price_total_thai = $datas[$x]['price_all'].'.-บาท';
-        }else{
-            $no_data = '';
-            $username = '';
-            $t3_n_data = '';
-            $price_total_thai = '';
-        }
+    // สั่ง Clone แถวตามจำนวนข้อมูลที่มีใน $datas
+    if (count($datas) > 0) {
+        $templateProcessor->cloneRow('name', count($datas));
 
-        $templateProcessor->setValue($no, $no_data);
-        $templateProcessor->setValue($name, $username);
-        $templateProcessor->setValue($t3_n, $t3_n_data);
-        $templateProcessor->setValue($price_n,  $price_total_thai);
+        foreach ($datas as $index => $row) {
+            $row_num = $index + 1;
+            
+            // ใส่ลำดับ (1., 2., 3...)
+            $templateProcessor->setValue('n#' . $row_num, $row_num . '.');
+            
+            // ใส่ชื่อ
+            $templateProcessor->setValue('name#' . $row_num, $row['name']);
+            
+            // รวมวันที่ (เช่น 1, 5, 10)
+            $days = array();
+            foreach ($row['work_day'] as $wd) {
+                $days[] = (int)date('j', strtotime($wd)); // ดึงเฉพาะเลขวันที่
+            }
+            sort($days); // เรียงลำดับวันที่จากน้อยไปมาก
+            $days_text = implode(', ', $days);
+            $templateProcessor->setValue('work_date#' . $row_num, $days_text);
+            
+            // ใส่จำนวนเงินรวมของคนนั้น
+            $templateProcessor->setValue('price_total#' . $row_num, Num_f($row['price_all']) . '.-บาท');
+            
+            // เก็บตัวแปรเดิมไว้เผื่อเทมเพลตยังใช้ชื่อเดิม (optional)
+            $templateProcessor->setValue('t3_n#' . $row_num, 'จำนวนเงิน');
+        }
     }
     
-    $templateProcessor->saveAs('ven.docx');//สั่งให้บันทึกข้อมูลลงไฟล์ใหม่
+    $templateProcessor->saveAs('ven.docx');
 
-    http_response_code(200);
     echo json_encode(array(
         'status' => true, 
         'message' => 'ok', 
@@ -215,10 +242,8 @@ try{
         "ven_com_num" => $ven_com_num,
         "ven_com_date" => $ven_com_date
     ));
- 
 
-}catch(PDOException $e){
-    // echo "Faild to connect to database" . $e->getMessage();
-    http_response_code(400);
-    echo json_encode(array('status' => false, 'message' => 'เกิดข้อผิดพลาด..' . $e->getMessage()));
+} catch(Exception $e) {
+    http_response_code(200); // Always return 200 to let axios read the JSON error message
+    echo json_encode(array('status' => false, 'message' => $e->getMessage()));
 }
