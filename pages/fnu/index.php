@@ -97,10 +97,17 @@
                                                 <td class="text-end fw-bold text-success">{{formatCurrency(data.price_sum)}}</td>                    
                                         </tr>
                                     </tbody>
-                                    <tfoot>
+                                    <tfoot class="table-light fw-bold">
                                         <tr>
-                                            <td :colspan="4 + ven_coms.length" class="text-end">รวมทั้งสิ้น</td>
-                                            <td class="text-end">{{formatCurrency(price_all)}}</td>
+                                            <td colspan="2" class="text-end">รวมทั้งสิ้น</td>
+                                            <td class="text-center">{{ dayTotal === 0 ? '-' : dayTotal }}</td>
+                                            <td class="text-center">{{ nightTotal === 0 ? '-' : nightTotal }}</td>
+                                            <td class="text-center" v-for="(total, idx) in colTotals">
+                                                {{ total === 0 ? '-' : formatCurrency(total) }}
+                                            </td>
+                                            <td class="text-end text-success" style="font-size: 1.1rem;">
+                                                {{formatCurrency(price_all)}}
+                                            </td>
                                         </tr>
                                     </tfoot>                    
                                 </table>
@@ -180,6 +187,26 @@
             // ทำให้เมนูย่อเป็นค่าเริ่มต้นตามที่ผู้ใช้ร้องขอ
             const sidebar = document.getElementById('sidebar');
             if (sidebar) sidebar.classList.remove('active');
+        },
+        computed: {
+            colTotals() {
+                if (!this.ven_coms || !this.datas) return [];
+                return this.ven_coms.map((vc, idx) => {
+                    let sum = 0;
+                    this.datas.forEach(person => {
+                        if (person.vcs_arr && person.vcs_arr[idx]) {
+                            sum += person.vcs_arr[idx].price;
+                        }
+                    });
+                    return sum;
+                });
+            },
+            dayTotal() {
+                return this.datas.reduce((acc, curr) => acc + (curr.D_c || 0), 0);
+            },
+            nightTotal() {
+                return this.datas.reduce((acc, curr) => acc + (curr.N_c || 0), 0);
+            }
         },
         methods: {
             loadData() {

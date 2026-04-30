@@ -202,6 +202,7 @@ require_once('../../server/authen.php');
                         <div v-if="rIdx === 0" style="font-weight:bold; text-decoration:underline; font-size: 14px;">{{person.name}}</div>
                         <div :style="'font-size: 13px; ' + (rIdx === 0 || row.type === 'excluded' ? 'padding-left:12px; ' : '') + (row.type === 'excluded' ? 'color:#c62828; font-style:italic;' : '')">
                             {{formatDutyName(row.duty.ven_name)}}
+                            <span v-if="row.duty.price_per > 0" style="font-size: 11px; color: #666;"> (฿{{formatNum(row.duty.price_per)}})</span>
                             <span v-if="row.type === 'excluded'"> (ไม่เบิก)</span>
                             <span v-else-if="row.duty.no_claim" class="no-claim">ไม่เบิก</span>
                         </div>
