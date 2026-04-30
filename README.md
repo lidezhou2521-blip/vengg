@@ -1,4 +1,4 @@
-# 🗓️ Duty Management System (Vengg)
+# 🗓️ ระบบบริหารจัดเวรนอกเวลาทำราชการ (Vengg)
 [![PHP Version](https://img.shields.io/badge/PHP-7.4%2B-blue.svg)](https://www.php.net/)
 [![MySQL](https://img.shields.io/badge/Database-MySQL%20/%20MariaDB-orange.svg)](https://www.mysql.com/)
 [![Vue.js](https://img.shields.io/badge/Frontend-Vue.js%203-green.svg)](https://vuejs.org/)
@@ -68,4 +68,4 @@
 - **Premium Aesthetics**: ปรับเปลี่ยนโทนสีและ Badge ให้ดูทันสมัยและเป็นมืออาชีพ
 
 ---
-© 2022-2026 **Btnc-ศจ.เบตง** - *พัฒนาเพื่อประสิทธิภาพสูงสุดในการบริหารจัดการจัดเวรนอกเวลาทำราชการ*
+© 2022-2026 **Btnc-ศจ.เบตง** - *พัฒนาเพื่อประสิทธิภาพสูงสุดในการบริหารจัดเวรนอกเวลาทำราชการ*
