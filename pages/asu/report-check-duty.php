@@ -788,6 +788,105 @@ require_once('../../server/authen.php');
     }
     .ven-modal-foot .btn-save-ven:hover { background: #0d47a1; }
     .ven-modal-foot .btn-save-ven:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Violation styling */
+    .day-chip.violation {
+      background: #ff9800 !important;
+      border-color: #ef6c00 !important;
+      color: #fff !important;
+      animation: pulse-warning 2s infinite;
+    }
+
+    @keyframes pulse-warning {
+      0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.6); }
+      70% { box-shadow: 0 0 0 8px rgba(255, 152, 0, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+    }
+
+    .day-chip.resolved {
+      background: #43a047 !important;
+      color: #fff !important;
+      border-color: #2e7d32 !important;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .violation-badge {
+      background: #fff3e0;
+      color: #e65100;
+      border: 1px solid #ffe0b2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .violation-badge i {
+      font-style: normal;
+    }
+
+    /* Custom Tooltip */
+    .day-chip {
+      position: relative;
+    }
+    .custom-tooltip {
+      visibility: hidden;
+      width: 220px;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1001;
+      bottom: 135%;
+      left: 50%;
+      margin-left: -110px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      line-height: 1.4;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    .custom-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+    .day-chip:hover .custom-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+    .custom-tooltip strong {
+      display: block;
+      color: #ffb74d;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+    .custom-tooltip ul {
+      margin: 0;
+      padding-left: 15px;
+      list-style-type: disc;
+    }
+    .custom-tooltip li {
+      margin-bottom: 2px;
+    }
+    .custom-tooltip .hint {
+      margin-top: 6px;
+      display: block;
+      color: #aaa;
+      font-style: italic;
+      border-top: 1px solid #444;
+      padding-top: 4px;
+    }
   </style>
 </head>
 
@@ -816,6 +915,14 @@ require_once('../../server/authen.php');
         <span class="legend-dot" style="background:#ffebee; color:#c62828; border:2px solid #ef9a9a;">✕</span>
         = ไม่เบิกจ่าย
       </span>
+      <span class="legend-item">
+        <span class="legend-dot violation" style="background:#ff9800; color:#fff;">!</span>
+        = เบิกซ้อน (>1 ประเภท/วัน)
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#43a047; color:#fff;">✓</span>
+        = แก้ไขแล้ว (เหลือ 1 ประเภท)
+      </span>
       <span v-if="lastSaved" style="margin-left:auto; color:#43a047; font-size:12px;">✓ บันทึกแล้ว {{lastSaved}}</span>
     </div>
 
@@ -835,6 +942,9 @@ require_once('../../server/authen.php');
           @click="toggleExpand(pIdx)">
           <div class="avatar">{{person.name ? person.name.charAt(0) : '?'}}</div>
           <div class="person-name">{{person.name}}</div>
+          <div class="violation-badge" v-if="getPersonViolations(pIdx).length > 0">
+            ⚠️ เบิกซ้อน {{getPersonViolations(pIdx).length}} วัน
+          </div>
           <div class="person-total">฿ {{formatNum(personTotal(person))}}</div>
           <span class="chevron">▼</span>
         </div>
@@ -852,9 +962,20 @@ require_once('../../server/authen.php');
                 <!-- Active days only (blue) -->
                 <span v-for="day in duty.days" :key="'a'+day"
                   class="day-chip active"
-                  :title="'วันที่ '+day+' - คลิกเพื่อดูรายละเอียด'"
+                  :class="{ violation: isDayViolation(pIdx, day), resolved: isDayResolved(pIdx, day) }"
                   @click="openModal(duty, day, person)">
                   {{pad(day)}}
+                  
+                  <!-- Custom Tooltip for Violations -->
+                  <div class="custom-tooltip" v-if="isDayViolation(pIdx, day)">
+                    <strong>⚠️ พบการเบิกซ้อนในวันนี้:</strong>
+                    <ul>
+                      <li v-for="(vName, vIdx) in getViolationDetails(pIdx, day)" :key="vIdx">
+                        {{vName}}
+                      </li>
+                    </ul>
+                    <span class="hint">คลิกที่ตัวเลขเพื่อเลือกรายการที่ไม่ต้องการเบิก</span>
+                  </div>
                 </span>
               </div>
               <div class="duty-total" :class="{zero: duty.total===0}">
@@ -1006,7 +1127,8 @@ require_once('../../server/authen.php');
             delLoading: false,
             saveLoading: false,
             savedOk: false
-          }
+          },
+          violationsMap: {}
         }
       },
       computed: {
@@ -1026,6 +1148,53 @@ require_once('../../server/authen.php');
           const comIdbEmpty = !d.ven_com_idb || String(d.ven_com_idb).trim() === '';
           const comNumEmpty = !d.ven_com_num_all || String(d.ven_com_num_all).trim() === '';
           return comIdEmpty && comIdbEmpty && comNumEmpty;
+        },
+        calculatedViolations() {
+          const map = {};
+          if (!this.datas.persons) return map;
+          
+          this.datas.persons.forEach((person, pIdx) => {
+            const dayCounts = {};
+            person.duties.forEach(duty => {
+              if (duty.no_claim) return;
+              if (duty.days) {
+                duty.days.forEach(day => {
+                  dayCounts[day] = (dayCounts[day] || 0) + 1;
+                });
+              }
+            });
+            const badDays = Object.keys(dayCounts)
+              .filter(day => dayCounts[day] > 1)
+              .map(Number);
+            if (badDays.length > 0) {
+              map[pIdx] = badDays;
+            }
+          });
+          return map;
+        },
+        resolvedMap() {
+          const map = {};
+          if (!this.datas.persons) return map;
+          this.datas.persons.forEach((person, pIdx) => {
+            const billableCount = {};
+            const totalCount = {};
+            person.duties.forEach(duty => {
+              if (duty.days) duty.days.forEach(d => {
+                billableCount[d] = (billableCount[d] || 0) + 1;
+                totalCount[d] = (totalCount[d] || 0) + 1;
+              });
+              if (duty.excluded_days) duty.excluded_days.forEach(d => {
+                totalCount[d] = (totalCount[d] || 0) + 1;
+              });
+            });
+            const resolvedDays = Object.keys(totalCount)
+              .filter(d => totalCount[d] > 1 && billableCount[d] === 1)
+              .map(Number);
+            if (resolvedDays.length > 0) {
+              map[pIdx] = resolvedDays;
+            }
+          });
+          return map;
         }
       },
       mounted() {
@@ -1068,6 +1237,24 @@ require_once('../../server/authen.php');
         },
         personTotal(person) {
           return person.duties.reduce((s, d) => s + (d.total || 0), 0);
+        },
+        isDayViolation(pIdx, day) {
+          const personVio = this.calculatedViolations[pIdx];
+          return personVio && personVio.includes(day);
+        },
+        isDayResolved(pIdx, day) {
+          const personRes = this.resolvedMap[pIdx];
+          return personRes && personRes.includes(day);
+        },
+        getPersonViolations(pIdx) {
+          return this.calculatedViolations[pIdx] || [];
+        },
+        getViolationDetails(pIdx, day) {
+          const person = this.datas.persons[pIdx];
+          if (!person) return [];
+          return person.duties
+            .filter(d => !d.no_claim && d.days && d.days.includes(day))
+            .map(d => this.formatDutyName(d.ven_name));
         },
         openModal(duty, day, person, directVenId) {
           // ดึง ven_id จาก day_ids หรือ excl_ids หรือ directVenId

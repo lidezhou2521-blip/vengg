@@ -452,6 +452,94 @@ require_once('../../server/authen.php');
                 margin: 0.5cm;
             }
         }
+
+        /* Custom Tooltip */
+        .day-chip {
+            position: relative;
+        }
+
+        .custom-tooltip {
+            visibility: hidden;
+            width: 220px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1001;
+            bottom: 135%;
+            left: 50%;
+            margin-left: -110px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 11px;
+            line-height: 1.4;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            font-weight: normal;
+        }
+
+        .custom-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .day-chip:hover .custom-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .custom-tooltip strong {
+            display: block;
+            color: #ffb74d;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .custom-tooltip ul {
+            margin: 0;
+            padding-left: 15px;
+            list-style-type: disc;
+        }
+
+        .custom-tooltip li {
+            margin-bottom: 2px;
+        }
+
+        .custom-tooltip .hint {
+            margin-top: 6px;
+            display: block;
+            color: #aaa;
+            font-style: italic;
+            border-top: 1px solid #444;
+            padding-top: 4px;
+        }
+
+        .day-chip.multi-claim {
+            background: #ff9800 !important;
+            color: #fff !important;
+            border-color: #ef6c00 !important;
+            animation: pulse-orange 2s infinite;
+        }
+
+        .day-chip.resolved {
+            background: #43a047 !important;
+            color: #fff !important;
+            border-color: #2e7d32 !important;
+        }
+
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(255, 152, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
     </style>
 </head>
 
@@ -527,9 +615,21 @@ require_once('../../server/authen.php');
                                 <td v-for="d in daysInMonth" :key="d" class="col-day" :class="{empty: !duty.days.includes(d)}">
                                     <span v-if="duty.days.includes(d)"
                                         class="day-chip"
-                                        :class="duty.is_no_claim ? 'no-claim' : (p.dayMap[d].length > 1 ? 'overlap' : 'active')"
+                                        :class="duty.is_no_claim ? 'no-claim' : (isMultiClaim(p, d) ? 'multi-claim' : (isResolvedOverlap(p, d) ? 'resolved' : (p.dayMap[d] && p.dayMap[d].length > 1 ? 'overlap' : 'active')))"
                                         @click="showDayDetail(p, d)">
                                         {{pad(d)}}
+
+                                        <!-- Custom Tooltip for Overlaps -->
+                                        <div class="custom-tooltip" v-if="p.dayMap[d] && p.dayMap[d].length > 1">
+                                            <strong v-if="isMultiClaim(p, d)">⚠️ พบการเบิกซ้อนในวันนี้:</strong>
+                                            <strong v-else>📋 รายการเวรในวันนี้:</strong>
+                                            <ul>
+                                                <li v-for="(vDetail, vIdx) in getOverlapDetails(p, d)" :key="vIdx">
+                                                    {{vDetail}}
+                                                </li>
+                                            </ul>
+                                            <span class="hint">คลิกที่ตัวเลขเพื่อดูรายละเอียด/แก้ไข</span>
+                                        </div>
                                     </span>
                                 </td>
                                 <td class="col-total">{{formatNum(duty.price_sum)}}</td>
@@ -835,6 +935,23 @@ require_once('../../server/authen.php');
                     if (name === 'ศาลแขวงและพิจารณาคำร้องขอปล่อยชั่วคราว') return 'เวรศาลแขวงฯ';
                     if (name === 'เวรเปิดทำการพิจารณาคำร้องขอปล่อยชั่วคราว') return 'เวรฯขอปล่อยชั่วคราว';
                     return name;
+                },
+                isMultiClaim(person, day) {
+                    if (!person.dayMap[day]) return false;
+                    const billableCount = person.dayMap[day].filter(v => !v.is_no_claim).length;
+                    return billableCount > 1;
+                },
+                isResolvedOverlap(person, day) {
+                    if (!person.dayMap[day]) return false;
+                    const total = person.dayMap[day].length;
+                    const billable = person.dayMap[day].filter(v => !v.is_no_claim).length;
+                    return total > 1 && billable === 1;
+                },
+                getOverlapDetails(person, day) {
+                    if (!person.dayMap[day]) return [];
+                    return person.dayMap[day].map(v => {
+                        return `${this.formatDutyName(v.ven_name)} (${v.DN}) ${v.is_no_claim ? '[ไม่เบิก]' : '[เบิก]'}`;
+                    });
                 },
                 async showDayDetail(person, day) {
                     const vens = person.dayMap[day] || [];

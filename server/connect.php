@@ -19,7 +19,7 @@ if (file_exists($gcal_config_path)) {
 define("__GOOGLE_CALENDAR__", $gcal_enabled);
 define("__GOOGLE_CALENDAR_URL__", $gcal_api_url);
 define("__LOGIN_BY__", "");                     // vengg : gdms
-define("__VERSION__", "V 2.1.9");               // version
+define("__VERSION__", "V 1.0");               // version
 
 date_default_timezone_set("Asia/Bangkok");
 
