@@ -51,7 +51,7 @@ require_once('../../server/authen.php');
       <div class="row mt-5">
         <div class="col-5"></div>
         <div class="col-7 text-end">
-          (เขียนที่)ศาลเยาวชนและครอบครัวจังหวัดประจวบคีรีขันธ์
+          (เขียนที่)ศาลจังหวัดเบตง
         </div>
       </div>
 
@@ -75,11 +75,8 @@ require_once('../../server/authen.php');
           <div class="col-1 text-start mt-1">            
             เรียน
           </div>
-          <div class="col text-start mt-1" v-if="datas.u_role1 =='ผู้พิพากษา'">
-            ผู้พิพากษาหัวหน้าศาลเยาวชนและครอบครัวจังหวัดประจวบคีรีขันธ์
-          </div>
-          <div class="col text-start mt-1" v-else>
-            ผู้อำนวยการสำนักงานประจำศาลเยาวชนและครอบครัวจังหวัดประจวบคีรีขันธ์
+          <div class="col text-start mt-1">
+            ผู้พิพากษาหัวหน้าศาลจังหวัดเบตง
           </div>
         </div>
 
@@ -87,7 +84,7 @@ require_once('../../server/authen.php');
           <div class="col-2 text-end mt-1">
           </div>
           <div class="col-7 text-start ">
-            ตามคำสั่งศาลเยาวชนและครอบครัวจังหวัดประจวบคีรีขันธ์ ที่ 
+            ตามคำสั่งศาลจังหวัดเบตง ที่ 
           </div>
           <div class="col text-center udl">
             <!-- {{datas.ven_com_num_all}} -->

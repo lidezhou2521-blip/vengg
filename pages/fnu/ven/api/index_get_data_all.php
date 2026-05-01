@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
 
-        $sql = "SELECT user_id,fname,name,sname,phone,bank_account,bank_comment 
+        $sql = "SELECT user_id,fname,name,sname,phone,bank_account,bank_comment,workgroup
                 FROM profile 
                 WHERE status=10 
                 ORDER BY st";
@@ -205,6 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "uid" => $user->user_id,
                     "vcs_arr" => $vcs_arr,
                     "name" => $user->fname . $user->name . ' ' . $user->sname,
+                    "workgroup" => $user->workgroup ?? '',
                     "vens" => $ven_users,
                     "D_c" => $D_c,
                     "N_c" => $N_c,

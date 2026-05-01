@@ -49,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ven_date_u1 = date("Y-m-d", strtotime('+1 day', strtotime($ven_date)));
         $ven_date_d1 = date("Y-m-d", strtotime('-1 day', strtotime($ven_date)));
 
-        $sql_VU = "SELECT * , p.fname, p.name, p.sname
+        $sql_VU = "SELECT v.* , p.fname, p.name, p.sname, p.workgroup
                     FROM ven AS v
-                    INNER JOIN profile as p ON v.user_id = p.user_id 
+                    INNER JOIN profile as p ON v.user_id = p.id 
                     WHERE v.user_id = $user_id2 
                         AND v.ven_date >= '$ven_date_d1' 
                         AND v.ven_date <= '$ven_date_u1' 
@@ -59,10 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         AND price  > 0";
         $query_VU = $conn->prepare($sql_VU);
         $query_VU->execute();
-        $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
-        
         if($query_VU->rowCount()){
-            foreach($res_VU as $ru){
+            $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
+            if ($res_VU[0]->workgroup != 'ผู้พิพากษา') {
+                foreach($res_VU as $ru){
                 // if($ru->ven_date == $ven_date){
                 //     http_response_code(200);
                 //     echo json_encode(array('status' => false, 'message' => $u_name2."\n".'วันที่ '.DateThai($ven_date).' มีเวรอยู่แล้ว.'));
@@ -199,6 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 gcal_update($rsv1->gcal_id, $name, $sms, 5);
+                }
             }
         }
 

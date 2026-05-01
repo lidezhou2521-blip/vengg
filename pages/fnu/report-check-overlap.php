@@ -536,9 +536,68 @@ require_once('../../server/authen.php');
         }
 
         @keyframes pulse-orange {
-            0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(255, 152, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(255, 152, 0, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+            }
+        }
+
+        /* ===== DOUBLE-CLICK SWAP ===== */
+        .day-chip.selected-src {
+            background: #fff9c4 !important;
+            color: #f57f17 !important;
+            border-color: #f9a825 !important;
+            box-shadow: 0 0 0 3px #f9a825, 0 0 10px rgba(249,168,37,0.4);
+            animation: none !important;
+            transform: scale(1.2);
+            z-index: 10;
+        }
+        .day-chip.click-target {
+            background: #7b1fa2 !important;
+            color: #fff !important;
+            border-color: #4a148c !important;
+            cursor: pointer;
+            animation: pulse-purple 0.9s ease-in-out infinite;
+            transform: scale(1.1);
+            z-index: 5;
+        }
+        @keyframes pulse-purple {
+            0%   { box-shadow: 0 0 0 0   rgba(123, 31, 162, 0.85); }
+            50%  { box-shadow: 0 0 0 8px rgba(123, 31, 162, 0);    background: #ab47bc !important; }
+            100% { box-shadow: 0 0 0 0   rgba(123, 31, 162, 0.85); }
+        }
+        /* swap mode banner */
+        .swap-hint-bar {
+            background: linear-gradient(90deg, #1a237e, #3949ab);
+            color: #fff;
+            text-align: center;
+            padding: 6px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        /* ปุ่มโหมดแลกเวร เมื่อเปิดอยู่ */
+        .swap-btn-active {
+            background: linear-gradient(135deg, #e65100, #ff6f00) !important;
+            color: #fff !important;
+            border-color: #bf360c !important;
+            animation: pulse-swap-btn 1.1s ease-in-out infinite;
+        }
+        @keyframes pulse-swap-btn {
+            0%   { box-shadow: 0 0 0 0   rgba(230, 81, 0, 0.7); }
+            55%  { box-shadow: 0 0 0 8px rgba(230, 81, 0, 0); transform: scale(1.04); }
+            100% { box-shadow: 0 0 0 0   rgba(230, 81, 0, 0.7); transform: scale(1); }
         }
     </style>
 </head>
@@ -555,6 +614,16 @@ require_once('../../server/authen.php');
             </header>
 
             <div v-cloak>
+                <!-- SWAP HINT BAR -->
+                <div class="swap-hint-bar d-print-none" v-if="swap.selected">
+                    <span>🔄 เลือกแล้ว: <strong>{{swap.selected.personName}}</strong> — วันที่ {{pad(swap.selected.day)}} ({{formatDutyName(swap.selected.dutyName)}} {{swap.selected.DN}})</span>
+                    <span style="opacity:0.8"> → คลิกที่เวรของอีกคนเพื่อแลก | กด Esc เพื่อยกเลิก</span>
+                    <button class="btn btn-sm btn-light ms-3" @click="swap.selected = null">✕ ยกเลิก</button>
+                </div>
+                <div class="swap-hint-bar d-print-none" v-else-if="swapMode" style="background: linear-gradient(90deg, #e65100, #f57c00);">
+                    <span>🔄 โหมดแลกเวร: ดับเบิ้ลคลิกที่วงกลมตัวเลขเพื่อเลือกเวรต้นทาง</span>
+                    <button class="btn btn-sm btn-light ms-3" @click="swapMode = false; swap.selected = null">✕ ปิดโหมดแลกเวร</button>
+                </div>
                 <!-- TOP BAR -->
                 <div class="topbar">
                     <div>
@@ -585,6 +654,16 @@ require_once('../../server/authen.php');
                         <input class="form-check-input" type="checkbox" id="showOnlyOverlap" v-model="showOnlyOverlap">
                         <label class="form-check-label fw-bold" for="showOnlyOverlap">แสดงเฉพาะที่มีเวรชน</label>
                     </div>
+
+                    <button
+                        class="btn btn-sm ms-3 fw-bold d-print-none"
+                        :class="swapMode ? ['swap-btn-active'] : ['btn-outline-secondary']"
+                        @click="swapMode = !swapMode; swap.selected = null"
+                        title="เปิด/ปิด โหมดแลกเวร"
+                    >
+                        <i class="bi bi-arrow-left-right"></i>
+                        {{ swapMode ? '🔄 โหมดแลกเวร (เปิดอยู่)' : '🔄 แลกเวร' }}
+                    </button>
                 </div>
 
                 <!-- TABLE AREA -->
@@ -612,11 +691,18 @@ require_once('../../server/authen.php');
                                     <span v-if="duty.is_no_claim" class="badge bg-secondary ms-1" style="font-size: 10px; font-weight: normal; opacity: 0.8;">ไม่เบิก</span>
                                     <span v-else class="badge bg-success ms-1" style="font-size: 10px; font-weight: normal; opacity: 0.8;">เบิก</span>
                                 </td>
-                                <td v-for="d in daysInMonth" :key="d" class="col-day" :class="{empty: !duty.days.includes(d)}">
+                                <td v-for="d in daysInMonth" :key="d"
+                                    class="col-day"
+                                    :class="{empty: !duty.days.includes(d), 'click-target': isClickTarget(p, duty, d)}">
                                     <span v-if="duty.days.includes(d)"
                                         class="day-chip"
-                                        :class="duty.is_no_claim ? 'no-claim' : (isMultiClaim(p, d) ? 'multi-claim' : (isResolvedOverlap(p, d) ? 'resolved' : (p.dayMap[d] && p.dayMap[d].length > 1 ? 'overlap' : 'active')))"
-                                        @click="showDayDetail(p, d)">
+                                        :class="[
+                                            duty.is_no_claim ? 'no-claim' : (isMultiClaim(p, d) ? 'multi-claim' : (isResolvedOverlap(p, d) ? 'resolved' : (p.dayMap[d] && p.dayMap[d].length > 1 ? 'overlap' : 'active'))),
+                                            isSelectedSrc(p, d, duty) ? 'selected-src' : '',
+                                            isClickTarget(p, duty, d) ? 'click-target' : ''
+                                        ]"
+                                        @dblclick.stop="onDblClick(p, duty, d)"
+                                        @click.stop="onChipClick(p, duty, d)">
                                         {{pad(d)}}
 
                                         <!-- Custom Tooltip for Overlaps -->
@@ -628,7 +714,7 @@ require_once('../../server/authen.php');
                                                     {{vDetail}}
                                                 </li>
                                             </ul>
-                                            <span class="hint">คลิกที่ตัวเลขเพื่อดูรายละเอียด/แก้ไข</span>
+                                            <span class="hint">ดับเบิ้ลคลิกเพื่อแลกเวร | คลิกเดียวเพื่อดูรายละเอียด</span>
                                         </div>
                                     </span>
                                 </td>
@@ -745,6 +831,10 @@ require_once('../../server/authen.php');
                         vensData: [],
                         venComs: {}
                     },
+                    swap: {
+                        selected: null
+                    },
+                    swapMode: false,
                     months_list: [{
                             val: '01',
                             name: 'มกราคม'
@@ -816,35 +906,44 @@ require_once('../../server/authen.php');
                     }
                 });
 
-                // Drag to scroll for table
+                // Escape ยกเลิกการเลือกเวร
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.swap.selected = null;
+                });
+
+                // Drag to scroll ซ้าย-ขวา (หยุดเมื่ออยู่ในโหมดแลกเวร)
                 this.$nextTick(() => {
                     const slider = document.querySelector('.table-wrap');
                     if (!slider) return;
                     let isDown = false;
                     let startX;
                     let scrollLeft;
-
-                    slider.style.cursor = 'grab';
+                    let moved = false;
 
                     slider.addEventListener('mousedown', (e) => {
+                        if (this.swapMode) return;
+                        if (e.target.closest('.day-chip')) return; // ไม่รบกวน chip click
                         isDown = true;
+                        moved = false;
                         slider.style.cursor = 'grabbing';
                         startX = e.pageX - slider.offsetLeft;
                         scrollLeft = slider.scrollLeft;
                     });
                     slider.addEventListener('mouseleave', () => {
                         isDown = false;
-                        slider.style.cursor = 'grab';
+                        slider.style.cursor = '';
                     });
                     slider.addEventListener('mouseup', () => {
                         isDown = false;
-                        slider.style.cursor = 'grab';
+                        slider.style.cursor = '';
                     });
                     slider.addEventListener('mousemove', (e) => {
                         if (!isDown) return;
+                        if (this.swapMode) return;
                         e.preventDefault();
+                        moved = true;
                         const x = e.pageX - slider.offsetLeft;
-                        const walk = (x - startX) * 1.5; // Scroll speed
+                        const walk = (x - startX) * 1.5;
                         slider.scrollLeft = scrollLeft - walk;
                     });
                 });
@@ -894,7 +993,9 @@ require_once('../../server/authen.php');
                                 price_sum: 0,
                                 is_no_claim: v.is_no_claim,
                                 vn_srt: parseInt(v.vn_srt || 999),
-                                vns_srt: parseInt(v.vns_srt || 999)
+                                vns_srt: parseInt(v.vns_srt || 999),
+                                ven_com_idb: v.ven_com_idb || '',
+                                u_role: v.u_role || ''
                             };
                             dutyGroups[gKey].days.push(day);
                             dutyGroups[gKey].price_sum += parseFloat(v.price || 0);
@@ -919,7 +1020,8 @@ require_once('../../server/authen.php');
                             name: p.name,
                             dayMap: dayMap,
                             dutyGroups: dutyGroupsArray,
-                            overlapCount: overlapCount
+                            overlapCount: overlapCount,
+                            workgroup: p.workgroup || ''  // จาก profile.workgroup เป็นตัวกำหนดตำแหน่งที่แม่นยำ
                         };
                     });
                 },
@@ -1123,6 +1225,162 @@ require_once('../../server/authen.php');
                     }).finally(() => {
                         this.isLoading = false;
                     });
+                },
+
+                /* ========== DOUBLE-CLICK SWAP ========== */
+                isJudge(workgroup) {
+                    return (workgroup || '').includes('ผู้พิพากษา');
+                },
+                getDayVen(person, day, duty) {
+                    if (!person.dayMap[day]) return null;
+                    const gKey = duty.ven_name + '|' + duty.DN + '|' + (duty.is_no_claim ? 'NC' : 'C');
+                    const match = person.dayMap[day].find(v => {
+                        const vKey = v.ven_name + '|' + v.DN + '|' + (v.is_no_claim ? 'NC' : 'C');
+                        return vKey === gKey;
+                    });
+                    return match ? match.id : null;
+                },
+                isSelectedSrc(person, day, duty) {
+                    if (!this.swap.selected) return false;
+                    return this.swap.selected.personUid === person.uid
+                        && this.swap.selected.day === day
+                        && this.swap.selected.dutyName === duty.ven_name
+                        && this.swap.selected.DN === duty.DN;
+                },
+                isClickTarget(person, duty, day) {
+                    if (!this.swap.selected) return false;
+                    if (this.swap.selected.personUid === person.uid) return false;
+
+                    const srcName = (this.swap.selected.dutyName || '').trim();
+                    const dstName = (duty.ven_name || '').trim();
+                    const srcDN = (this.swap.selected.DN || '').trim();
+                    const dstDN = (duty.DN || '').trim();
+                    const srcCom = (this.swap.selected.ven_com_idb || '').toString().trim();
+                    const dstCom = (duty.ven_com_idb || '').toString().trim();
+
+                    if (dstName !== srcName) return false;
+                    if (dstDN !== srcDN) return false;
+                    if (dstCom !== srcCom) return false;
+                    if (!duty.days.includes(day)) return false;
+
+                    // ผู้พิพากษาแลกได้เฉพาะกับผู้พิพากษา ใช้ workgroup จาก profile
+                    const srcIsJudge = this.isJudge(this.swap.selected.workgroup);
+                    const dstIsJudge = this.isJudge(person.workgroup);
+                    if (srcIsJudge && !dstIsJudge) return false;
+                    if (!srcIsJudge && dstIsJudge) return false;
+
+                    return true;
+                },
+                onDblClick(person, duty, day) {
+                    // ถ้าไม่อยู่ในโหมดแลกเวร = เปิด modal
+                    if (!this.swapMode) {
+                        this.showDayDetail(person, day);
+                        return;
+                    }
+                    const venId = this.getDayVen(person, day, duty);
+                    if (!venId) return;
+                    // ดับเบิ้ลคลิกซ้ำ = ยกเลิก
+                    if (this.swap.selected && this.swap.selected.venId === venId) {
+                        this.swap.selected = null;
+                        return;
+                    }
+                    // เลือกเป็นต้นทาง
+                    this.swap.selected = {
+                        venId,
+                        day,
+                        dutyName: duty.ven_name,
+                        DN: duty.DN,
+                        ven_com_idb: duty.ven_com_idb || '',
+                        personName: person.name,
+                        personUid: person.uid,
+                        workgroup: person.workgroup || ''  // ใช้ workgroup จาก profile เป็นตัวบ่งชี้ตำแหน่ง
+                    };
+                },
+                async onChipClick(person, duty, day) {
+                    // ถ้าไม่อยู่ในโหมดแลกเวร = เปิด modal ปกติ
+                    if (!this.swapMode) {
+                        this.showDayDetail(person, day);
+                        return;
+                    }
+                    // ถ้าไม่มีต้นทาง = ไม่ทำอะไร (ให้ดับเบิ้ลคลิกเลือกก่อน)
+                    if (!this.swap.selected) return;
+                    // คลิกที่ตัวเอง = ยกเลิก
+                    if (this.swap.selected.personUid === person.uid && this.swap.selected.day === day) {
+                        this.swap.selected = null;
+                        return;
+                    }
+                    // ตรวจเงื่อนไข
+                    if (!this.isClickTarget(person, duty, day)) {
+                        const srcIsJudge = this.isJudge(this.swap.selected.workgroup);
+                        const dstIsJudge = this.isJudge(person.workgroup);
+                        let reason = 'ต้องแลกเฉพาะเวรที่:<br>&bull; <b>ชื่อเวรเดียวกัน</b><br>&bull; <b>ประเภทเดียวกัน</b> (กลางวัน/กลางคืน)<br>&bull; <b>คำสั่งเดียวกัน</b>';
+
+                        if ((srcIsJudge && !dstIsJudge) || (!srcIsJudge && dstIsJudge)) {
+                            reason = '<b>ผู้พิพากษาแลกได้เฉพาะกับผู้พิพากษาเท่านั้น</b><br>ตำแหน่งอื่นๆ แลกได้เฉพาะกันเอง';
+                        } else {
+                            const srcN = (this.swap.selected.dutyName || '').trim();
+                            const dstN = (duty.ven_name || '').trim();
+                            const srcDN = (this.swap.selected.DN || '').trim();
+                            const dstDN = (duty.DN || '').trim();
+                            const srcCom = (this.swap.selected.ven_com_idb || '').toString().trim();
+                            const dstCom = (duty.ven_com_idb || '').toString().trim();
+                            if (srcN !== dstN) reason = `ชื่อเวรไม่ตรงกัน:<br>ต้นทาง: ${srcN}<br>ปลายทาง: ${dstN}`;
+                            else if (srcDN !== dstDN) reason = `ประเภทเวร (กลางวัน/กลางคืน) ไม่ตรงกัน`;
+                            else if (srcCom !== dstCom) reason = `คำสั่งเวรไม่ตรงกัน (คนละเลขที่คำสั่ง)`;
+                        }
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'แลกเวรไม่ได้',
+                            html: `<div style="text-align:left;font-size:14px;line-height:1.8">${reason}</div>`,
+                            confirmButtonText: 'ตกลง'
+                        });
+                        return;
+                    }
+                    const src = this.swap.selected;
+                    const dstVenId = this.getDayVen(person, day, duty);
+                    if (!dstVenId) {
+                        this.alert('warning', 'ไม่พบเวรปลายทาง', 1500);
+                        return;
+                    }
+                    const captureId_a = src.venId;
+                    const captureId_b = dstVenId;
+                    const srcName = src.personName;
+                    const dstName = person.name;
+                    this.swap.selected = null;
+
+                    const result = await Swal.fire({
+                        title: '🔄 ยืนยันการแลกเวร',
+                        html: `<div style="text-align:left;font-size:14px;line-height:2">
+                                <b>ต้นทาง:</b> ${srcName} — วันที่ ${this.pad(src.day)}<br>
+                                <b>ปลายทาง:</b> ${dstName} — วันที่ ${this.pad(day)}<br>
+                                <b>เวร:</b> ${this.formatDutyName(src.dutyName)} (${src.DN})<br>
+                                <span style="color:#e53935">⚠️ ไม่ตรวจสอบเวรชน</span>
+                               </div>`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: '✅ แลกเวรเลย',
+                        cancelButtonText: 'ยกเลิก',
+                        confirmButtonColor: '#1a237e'
+                    });
+
+                    if (!result.isConfirmed) return;
+
+                    try {
+                        const res = await axios.post('../../server/asu/ven_set/ven_swap.php', {
+                            id_a: captureId_a,
+                            id_b: captureId_b
+                        });
+                        if (res.data.status) {
+                            this.alert('success', 'แลกเวรสำเร็จ! 🎉', 1500);
+                            this.fetchData();
+                        } else {
+                            this.alert('error', res.data.message || 'เกิดข้อผิดพลาด', 2000);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        this.alert('error', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 2000);
+                    }
                 }
             }
         }).mount('#main');

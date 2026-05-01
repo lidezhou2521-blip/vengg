@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $create_at          = Date("Y-m-d H:i:s");
 
         /** เรียกใบเวรที่ 1 */
-        $sql    = "SELECT v.*, p.fname, p.name, p.sname 
+        $sql    = "SELECT v.*, p.fname, p.name, p.sname, p.workgroup 
                     FROM ven AS v
                     INNER JOIN `profile` AS p ON v.user_id = p.id 
                     WHERE v.id = :id AND v.status=1";
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         /** เรียกใบเวรที่ 2 */
-        $sql    = "SELECT v.*, p.fname, p.name, p.sname 
+        $sql    = "SELECT v.*, p.fname, p.name, p.sname, p.workgroup 
                     FROM ven AS v
                     INNER JOIN `profile` AS p ON v.user_id = p.id 
                     WHERE v.id = :id AND v.status=1";
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $query_VU->execute();
         $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
 
-        if ($query_VU->rowCount()) {
+        if ($query_VU->rowCount() && $rsv1->workgroup != 'ผู้พิพากษา') {
             foreach ($res_VU as $ru) {
                 // if ($ru->ven_date == $rsv2->ven_date) {
                 //     http_response_code(200);
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $query_VU->execute();
         $res_VU = $query_VU->fetchAll(PDO::FETCH_OBJ);
 
-        if ($query_VU->rowCount()) {
+        if ($query_VU->rowCount() && $rsv2->workgroup != 'ผู้พิพากษา') {
             foreach ($res_VU as $ru) {
                 // if ($ru->ven_date == $rsv1->ven_date) {
                 //     http_response_code(200);
