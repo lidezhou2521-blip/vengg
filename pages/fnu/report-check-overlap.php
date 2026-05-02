@@ -145,16 +145,16 @@ require_once('../../server/authen.php');
             background: #e8eaf6;
             color: #1a237e;
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 10px 4px;
+            padding: 4px 1px;
             border-right: 1px solid #c5cae9;
             border-bottom: 2px solid #c5cae9;
         }
 
         .duty-table thead tr.day-header th.col-info {
             text-align: left;
-            padding-left: 15px;
+            padding-left: 8px;
             position: sticky;
             left: 0;
             z-index: 100;
@@ -165,12 +165,12 @@ require_once('../../server/authen.php');
         }
 
         .duty-table thead tr.day-header th.col-name {
-            width: 320px;
+            width: 1%;
+            white-space: nowrap;
         }
 
         .duty-table thead tr.day-header th.col-day {
-            width: 34px;
-            min-width: 34px;
+            min-width: 20px;
         }
 
         .duty-table thead tr.day-header th.col-total {
@@ -185,11 +185,11 @@ require_once('../../server/authen.php');
         /* Person Separator Row */
         .person-sep td {
             background: #e8eaf6;
-            padding: 10px 15px;
+            padding: 5px 10px;
             font-weight: 700;
             color: #1a237e;
             border-top: 2px solid #c5cae9;
-            font-size: 15px;
+            font-size: 13px;
         }
 
         .person-sep .overlap-badge {
@@ -208,7 +208,7 @@ require_once('../../server/authen.php');
         }
 
         .duty-row td {
-            padding: 8px 5px;
+            padding: 1px;
             border-bottom: 1px solid #e0e0e0;
             border-right: 1px solid #e0e0e0;
             text-align: center;
@@ -217,13 +217,13 @@ require_once('../../server/authen.php');
 
         .duty-row td.col-info {
             text-align: left;
-            padding-left: 15px;
+            padding-left: 8px;
             position: sticky;
             left: 0;
             z-index: 50;
             background: #fff;
             border-right: 2px solid #bdbdbd;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 600;
             color: #455a64;
             white-space: nowrap;
@@ -236,7 +236,7 @@ require_once('../../server/authen.php');
             right: 0;
             background: #fff;
             border-left: 2px solid #bdbdbd;
-            font-size: 15px;
+            font-size: 12px;
         }
 
         .no-claim-row td.col-info {
@@ -249,9 +249,10 @@ require_once('../../server/authen.php');
 
         /* Day Chips */
         .day-chip {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            width: calc(100% - 2px);
+            height: 100%;
+            min-height: 22px;
+            border-radius: 3px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -259,7 +260,8 @@ require_once('../../server/authen.php');
             font-weight: 700;
             cursor: pointer;
             transition: all 0.15s;
-            border: 2px solid transparent;
+            border: 1.5px solid transparent;
+            box-sizing: border-box;
         }
 
         .day-chip.active {
@@ -554,25 +556,37 @@ require_once('../../server/authen.php');
             background: #fff9c4 !important;
             color: #f57f17 !important;
             border-color: #f9a825 !important;
-            box-shadow: 0 0 0 3px #f9a825, 0 0 10px rgba(249,168,37,0.4);
+            box-shadow: 0 0 0 2px #f9a825, 0 0 6px rgba(249, 168, 37, 0.4);
             animation: none !important;
-            transform: scale(1.2);
+            transform: scale(1.15);
             z-index: 10;
         }
+
         .day-chip.click-target {
             background: #7b1fa2 !important;
             color: #fff !important;
             border-color: #4a148c !important;
             cursor: pointer;
             animation: pulse-purple 0.9s ease-in-out infinite;
-            transform: scale(1.1);
+            transform: scale(1.08);
             z-index: 5;
         }
+
         @keyframes pulse-purple {
-            0%   { box-shadow: 0 0 0 0   rgba(123, 31, 162, 0.85); }
-            50%  { box-shadow: 0 0 0 8px rgba(123, 31, 162, 0);    background: #ab47bc !important; }
-            100% { box-shadow: 0 0 0 0   rgba(123, 31, 162, 0.85); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(123, 31, 162, 0.85);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(123, 31, 162, 0);
+                background: #ab47bc !important;
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(123, 31, 162, 0.85);
+            }
         }
+
         /* swap mode banner */
         .swap-hint-bar {
             background: linear-gradient(90deg, #1a237e, #3949ab);
@@ -587,6 +601,7 @@ require_once('../../server/authen.php');
             justify-content: center;
             gap: 10px;
         }
+
         /* ปุ่มโหมดแลกเวร เมื่อเปิดอยู่ */
         .swap-btn-active {
             background: linear-gradient(135deg, #e65100, #ff6f00) !important;
@@ -594,10 +609,21 @@ require_once('../../server/authen.php');
             border-color: #bf360c !important;
             animation: pulse-swap-btn 1.1s ease-in-out infinite;
         }
+
         @keyframes pulse-swap-btn {
-            0%   { box-shadow: 0 0 0 0   rgba(230, 81, 0, 0.7); }
-            55%  { box-shadow: 0 0 0 8px rgba(230, 81, 0, 0); transform: scale(1.04); }
-            100% { box-shadow: 0 0 0 0   rgba(230, 81, 0, 0.7); transform: scale(1); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.7);
+            }
+
+            55% {
+                box-shadow: 0 0 0 8px rgba(230, 81, 0, 0);
+                transform: scale(1.04);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.7);
+                transform: scale(1);
+            }
         }
     </style>
 </head>
@@ -621,7 +647,7 @@ require_once('../../server/authen.php');
                     <button class="btn btn-sm btn-light ms-3" @click="swap.selected = null">✕ ยกเลิก</button>
                 </div>
                 <div class="swap-hint-bar d-print-none" v-else-if="swapMode" style="background: linear-gradient(90deg, #e65100, #f57c00);">
-                    <span>🔄 โหมดแลกเวร: ดับเบิ้ลคลิกที่วงกลมตัวเลขเพื่อเลือกเวรต้นทาง</span>
+                    <span>🔄 โหมดแลกเวร: ดับเบิ้ลคลิกที่ช่องตัวเลขเพื่อเลือกเวรต้นทาง</span>
                     <button class="btn btn-sm btn-light ms-3" @click="swapMode = false; swap.selected = null">✕ ปิดโหมดแลกเวร</button>
                 </div>
                 <!-- TOP BAR -->
@@ -659,8 +685,7 @@ require_once('../../server/authen.php');
                         class="btn btn-sm ms-3 fw-bold d-print-none"
                         :class="swapMode ? ['swap-btn-active'] : ['btn-outline-secondary']"
                         @click="swapMode = !swapMode; swap.selected = null"
-                        title="เปิด/ปิด โหมดแลกเวร"
-                    >
+                        title="เปิด/ปิด โหมดแลกเวร">
                         <i class="bi bi-arrow-left-right"></i>
                         {{ swapMode ? '🔄 โหมดแลกเวร (เปิดอยู่)' : '🔄 แลกเวร' }}
                     </button>
@@ -681,6 +706,7 @@ require_once('../../server/authen.php');
                             <tr class="person-sep">
                                 <td :colspan="daysInMonth + 2">
                                     <i class="bi bi-person-circle me-2"></i> {{p.name}}
+                                    <span v-if="p.claimTotal > 0" style="margin-left: 8px; background: #1565c0; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 700; vertical-align: middle;">฿{{formatNum(p.claimTotal)}}</span>
                                     <span class="overlap-badge" v-if="p.overlapCount > 0">พบเวรชน {{p.overlapCount}} วัน</span>
                                 </td>
                             </tr>
@@ -690,6 +716,7 @@ require_once('../../server/authen.php');
                                     {{formatDutyName(duty.ven_name)}} ({{duty.DN === 'กลางวัน' ? '☀️' : '🌙'}})
                                     <span v-if="duty.is_no_claim" class="badge bg-secondary ms-1" style="font-size: 10px; font-weight: normal; opacity: 0.8;">ไม่เบิก</span>
                                     <span v-else class="badge bg-success ms-1" style="font-size: 10px; font-weight: normal; opacity: 0.8;">เบิก</span>
+                                    <span v-if="duty.price_per_day > 0" class="badge ms-1" style="font-size: 9px; font-weight: 600; background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9;">฿{{formatNum(duty.price_per_day)}}</span>
                                 </td>
                                 <td v-for="d in daysInMonth" :key="d"
                                     class="col-day"
@@ -740,7 +767,7 @@ require_once('../../server/authen.php');
                     <div class="modal-body">
                         <div v-if="modal.loading" class="p-5 text-center text-muted">⏳ กำลังโหลด...</div>
                         <div v-else>
-                            <div v-for="(v, idx) in modal.vensData" :key="v.id" class="duty-block">
+                            <div v-for="(v, idx) in filteredModalVens" :key="v.id" class="duty-block">
                                 <div class="duty-block-title">เวรลำดับที่ {{idx + 1}}: {{v.ven_name}}</div>
                                 <table class="modal-table">
                                     <tbody>
@@ -758,10 +785,18 @@ require_once('../../server/authen.php');
                                             <td>{{v.ven_date}} เวลา {{v.ven_time}} น.</td>
                                         </tr>
                                         <tr>
+                                            <td colspan="2" class="p-1">
+                                                <div class="alert alert-info py-1 px-2 mb-0" style="font-size: 11px; border-radius: 4px; border: none; background-color: #e3f2fd; color: #0d47a1;">
+                                                    💡 <b>สำหรับการเงิน:</b> ติ๊กถูกที่หน้าคำสั่งเพื่อ "เบิกเงิน" (หากไม่ติ๊กเลยระบบจะถือเป็นเวรไม่เบิกเงินอัตโนมัติ)
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <th>เบิกเงินในคำสั่ง</th>
                                             <td>
                                                 <select class="form-select" v-model="v.ven_com_idb" @change="venSave2(v)">
-                                                    <option v-for="vc in modal.venComs[v.id]" :key="vc.vc_id" :value="String(vc.vc_id)">
+                                                    <option value="">-- เลือกคำสั่งเบิก --</option>
+                                                    <option v-for="vc in getFilteredVenComs(v)" :key="vc.vc_id" :value="String(vc.vc_id)">
                                                         {{' คำสั่งที่ ' + vc.ven_com_num + ' เวร ' + vc.name}}
                                                     </option>
                                                 </select>
@@ -771,8 +806,11 @@ require_once('../../server/authen.php');
                                             <th>คำสั่ง</th>
                                             <td>{{v.u_role}} | {{v.DN}} | {{v.ven_com_name}} | {{v.price}}</td>
                                         </tr>
-                                        <tr v-for="(vc, i) in modal.venComs[v.id]" :key="'vc'+v.id+i">
-                                            <td></td>
+                                        <tr v-for="(vc, i) in getFilteredVenComs(v)" :key="'vc'+v.id+i">
+                                            <td class="text-center" style="width: 80px;">
+                                                <span v-if="v.ven_com_id.includes(String(vc.vc_id))" class="badge bg-success">เบิก</span>
+                                                <span v-else class="badge bg-secondary">ไม่เบิก</span>
+                                            </td>
                                             <td>
                                                 <input type="checkbox" :id="'ck'+v.id+i" :value="String(vc.vc_id)" v-model="v.ven_com_id" @change="venSave(v)">
                                                 <label :for="'ck'+v.id+i"> {{' คำสั่งที่ ' + vc.ven_com_num + ' เวร ' + vc.name}}</label>
@@ -780,7 +818,32 @@ require_once('../../server/authen.php');
                                         </tr>
                                         <tr>
                                             <th>ชื่อผู้อยู่</th>
-                                            <td><strong>{{v.fname}}{{v.name}} {{v.sname}}</strong></td>
+                                            <td>
+                                                <div class="d-flex flex-column gap-2">
+                                                    <div class="fw-bold text-primary">{{v.fname}}{{v.name}} {{v.sname}}</div>
+                                                    <div class="input-group input-group-sm">
+                                                        <div class="w-100 mb-2">
+                                                            <input type="text" class="form-control form-control-sm" v-model="modalUserSearch" placeholder="🔍 ค้นหารายชื่อ/ตำแหน่ง...">
+                                                        </div>
+                                                        <select class="form-select form-select-sm" v-model="v.u_id">
+                                                            <option value="">-- เลือกผู้เปลี่ยนตัว --</option>
+                                                            <optgroup label="ผู้พิพากษา">
+                                                                <option v-for="user in getFilteredUsers('judge')" :key="user.id" :value="user.id">
+                                                                    {{user.fname}}{{user.name}} {{user.sname}}
+                                                                </option>
+                                                            </optgroup>
+                                                            <optgroup label="เจ้าหน้าที่">
+                                                                <option v-for="user in getFilteredUsers('staff')" :key="user.id" :value="user.id">
+                                                                    {{user.fname}}{{user.name}} {{user.sname}}
+                                                                </option>
+                                                            </optgroup>
+                                                        </select>
+                                                        <button class="btn btn-primary" type="button" @click="venTransfer(v)" :disabled="!v.u_id">
+                                                            <i class="bi bi-person-check"></i> เปลี่ยนตัว
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th>การจัดการ</th>
@@ -829,12 +892,16 @@ require_once('../../server/authen.php');
                         loading: false,
                         day: null,
                         vensData: [],
-                        venComs: {}
+                        venComs: {},
+                        targetGroupKey: null,
+                        showAllOnDay: false
                     },
                     swap: {
                         selected: null
                     },
                     swapMode: false,
+                    modalUserSearch: '',
+                    modalUserFilter: 'all', // 'all', 'judge', 'staff'
                     months_list: [{
                             val: '01',
                             name: 'มกราคม'
@@ -876,7 +943,8 @@ require_once('../../server/authen.php');
                             name: 'ธันวาคม'
                         }
                     ],
-                    years_list: []
+                    years_list: [],
+                    users_list: []
                 }
             },
             computed: {
@@ -891,11 +959,20 @@ require_once('../../server/authen.php');
                 },
                 totalOverlaps() {
                     return this.persons.reduce((s, p) => s + (p.overlapCount > 0 ? 1 : 0), 0);
+                },
+                filteredModalVens() {
+                    if (!this.modal.targetGroupKey) return this.modal.vensData;
+
+                    return this.modal.vensData.filter(v => {
+                        const vKey = v.ven_name + '|' + v.DN + '|' + (this.isNoClaim(v) ? 'NC' : 'C');
+                        return vKey === this.modal.targetGroupKey;
+                    });
                 }
             },
             mounted() {
                 this.initYears();
                 this.fetchData();
+                this.fetchUsers();
                 // Collapse sidebar by default
                 const sidebar = document.getElementById('sidebar');
                 if (sidebar) sidebar.classList.remove('active');
@@ -953,6 +1030,19 @@ require_once('../../server/authen.php');
                     const y = new Date().getFullYear();
                     for (let i = -1; i <= 2; i++) this.years_list.push(y + i);
                 },
+                fetchUsers() {
+                    // ใช้พาธแบบอ้างอิงจาก root หรือกะระยะให้แม่นยำ
+                    axios.get('ven/api/get_users.php')
+                        .then(res => {
+                            console.log('Users Data:', res.data); // ดูค่าใน F12 > Console
+                            if (res.data.status) {
+                                this.users_list = res.data.users;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Fetch Users Error:', err);
+                        });
+                },
                 fetchData() {
                     this.isLoading = true;
                     axios.post('./ven/api/index_get_data_all.php', {
@@ -991,6 +1081,7 @@ require_once('../../server/authen.php');
                                 DN: v.DN,
                                 days: [],
                                 price_sum: 0,
+                                price_per_day: parseFloat(v.price || 0),
                                 is_no_claim: v.is_no_claim,
                                 vn_srt: parseInt(v.vn_srt || 999),
                                 vns_srt: parseInt(v.vns_srt || 999),
@@ -1011,9 +1102,16 @@ require_once('../../server/authen.php');
                             return a.vns_srt - b.vns_srt;
                         });
 
+                        // นับเฉพาะวันที่มีเวร "เบิก" ซ้อนกัน > 1 เท่านั้น (ไม่นับ "ไม่เบิก")
                         Object.keys(dayMap).forEach(d => {
-                            if (dayMap[d].length > 1) overlapCount++;
+                            const billable = dayMap[d].filter(v => !v.is_no_claim).length;
+                            if (billable > 1) overlapCount++;
                         });
+
+                        // คำนวณยอดรวมเฉพาะที่เบิกได้
+                        const claimTotal = dutyGroupsArray
+                            .filter(g => !g.is_no_claim)
+                            .reduce((sum, g) => sum + g.price_sum, 0);
 
                         return {
                             uid: p.uid,
@@ -1021,7 +1119,8 @@ require_once('../../server/authen.php');
                             dayMap: dayMap,
                             dutyGroups: dutyGroupsArray,
                             overlapCount: overlapCount,
-                            workgroup: p.workgroup || ''  // จาก profile.workgroup เป็นตัวกำหนดตำแหน่งที่แม่นยำ
+                            claimTotal: claimTotal,
+                            workgroup: p.workgroup || '' // จาก profile.workgroup เป็นตัวกำหนดตำแหน่งที่แม่นยำ
                         };
                     });
                 },
@@ -1055,7 +1154,7 @@ require_once('../../server/authen.php');
                         return `${this.formatDutyName(v.ven_name)} (${v.DN}) ${v.is_no_claim ? '[ไม่เบิก]' : '[เบิก]'}`;
                     });
                 },
-                async showDayDetail(person, day) {
+                async showDayDetail(person, day, dutyGroup = null) {
                     const vens = person.dayMap[day] || [];
                     if (vens.length === 0) return;
 
@@ -1064,8 +1163,22 @@ require_once('../../server/authen.php');
                         loading: true,
                         day: day,
                         vensData: [],
-                        venComs: {}
+                        venComs: {},
+                        targetGroupKey: dutyGroup ? (dutyGroup.ven_name + '|' + dutyGroup.DN + '|' + (dutyGroup.is_no_claim ? 'NC' : 'C')) : null,
+                        showAllOnDay: false
                     };
+                    this.modalUserSearch = '';
+                    this.modalUserFilter = 'all';
+
+                    // Auto-set filter based on first duty's role
+                    if (vens.length > 0) {
+                        const firstRole = vens[0].ven_name || '';
+                        if (firstRole.includes('ผู้พิพากษา')) {
+                            this.modalUserFilter = 'judge';
+                        } else {
+                            this.modalUserFilter = 'staff';
+                        }
+                    }
 
                     try {
                         for (let v of vens) {
@@ -1083,6 +1196,7 @@ require_once('../../server/authen.php');
                                 }
                                 vData.ven_com_idb = vData.ven_com_idb ? String(vData.ven_com_idb) : '';
 
+                                vData.u_id = vData.user_id;
                                 this.modal.vensData.push(vData);
                                 this.modal.venComs[vData.id] = res.data.ven_coms || [];
                             }
@@ -1123,6 +1237,15 @@ require_once('../../server/authen.php');
                     });
                 },
                 venSave(v) {
+                    // Sync: ensure ven_com_idb is within the selected ven_com_id array
+                    if (v.ven_com_id && v.ven_com_id.length > 0) {
+                        if (!v.ven_com_id.includes(v.ven_com_idb)) {
+                            v.ven_com_idb = v.ven_com_id[0];
+                        }
+                    } else {
+                        v.ven_com_idb = '';
+                    }
+
                     axios.post('../../server/asu/ven_set/ven_up_vcid.php', {
                             data_event: v
                         })
@@ -1135,6 +1258,14 @@ require_once('../../server/authen.php');
                         });
                 },
                 venSave2(v) {
+                    // Sync: if a claiming command is selected, it MUST be in the ven_com_id list
+                    if (v.ven_com_idb && !v.ven_com_id.includes(v.ven_com_idb)) {
+                        v.ven_com_id.push(v.ven_com_idb);
+                        // Update both by using venSave
+                        this.venSave(v);
+                        return;
+                    }
+
                     axios.post('../../server/asu/ven_set/ven_up_vcid2.php', {
                             data_event: v
                         })
@@ -1194,6 +1325,32 @@ require_once('../../server/authen.php');
                         }
                     });
                 },
+                venTransfer(v) {
+                    Swal.fire({
+                        title: 'ยืนยันการเปลี่ยนคนอยู่เวร?',
+                        text: "ระบบจะเปลี่ยนตัวผู้อยู่เวรทันที (ไม่ต้องผ่านหลายทอด)",
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'ตกลง',
+                        cancelButtonText: 'ยกเลิก'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            axios.post('./ven/api/ven_transfer.php', {
+                                    id: v.id,
+                                    new_user_id: v.u_id
+                                })
+                                .then(res => {
+                                    if (res.data.status) {
+                                        this.fetchDutyDetail(v);
+                                        this.fetchData(); // Refresh main list
+                                        this.alert('success', res.data.message, 1500);
+                                    } else {
+                                        this.alert('error', res.data.message, 2000);
+                                    }
+                                });
+                        }
+                    });
+                },
                 alert(icon, message, timer = 0) {
                     Swal.fire({
                         position: 'top-end',
@@ -1242,10 +1399,10 @@ require_once('../../server/authen.php');
                 },
                 isSelectedSrc(person, day, duty) {
                     if (!this.swap.selected) return false;
-                    return this.swap.selected.personUid === person.uid
-                        && this.swap.selected.day === day
-                        && this.swap.selected.dutyName === duty.ven_name
-                        && this.swap.selected.DN === duty.DN;
+                    return this.swap.selected.personUid === person.uid &&
+                        this.swap.selected.day === day &&
+                        this.swap.selected.dutyName === duty.ven_name &&
+                        this.swap.selected.DN === duty.DN;
                 },
                 isClickTarget(person, duty, day) {
                     if (!this.swap.selected) return false;
@@ -1274,7 +1431,7 @@ require_once('../../server/authen.php');
                 onDblClick(person, duty, day) {
                     // ถ้าไม่อยู่ในโหมดแลกเวร = เปิด modal
                     if (!this.swapMode) {
-                        this.showDayDetail(person, day);
+                        this.showDayDetail(person, day, duty);
                         return;
                     }
                     const venId = this.getDayVen(person, day, duty);
@@ -1293,13 +1450,13 @@ require_once('../../server/authen.php');
                         ven_com_idb: duty.ven_com_idb || '',
                         personName: person.name,
                         personUid: person.uid,
-                        workgroup: person.workgroup || ''  // ใช้ workgroup จาก profile เป็นตัวบ่งชี้ตำแหน่ง
+                        workgroup: person.workgroup || '' // ใช้ workgroup จาก profile เป็นตัวบ่งชี้ตำแหน่ง
                     };
                 },
                 async onChipClick(person, duty, day) {
                     // ถ้าไม่อยู่ในโหมดแลกเวร = เปิด modal ปกติ
                     if (!this.swapMode) {
-                        this.showDayDetail(person, day);
+                        this.showDayDetail(person, day, duty);
                         return;
                     }
                     // ถ้าไม่มีต้นทาง = ไม่ทำอะไร (ให้ดับเบิ้ลคลิกเลือกก่อน)
@@ -1381,6 +1538,63 @@ require_once('../../server/authen.php');
                         console.error(err);
                         this.alert('error', 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้', 2000);
                     }
+                },
+                getFilteredUsers(type = null) {
+                    let list = this.users_list;
+
+                    // Filter by Judge/Staff type
+                    if (type === 'judge') {
+                        list = list.filter(u => (u.workgroup || '').includes('ผู้พิพากษา'));
+                    } else if (type === 'staff') {
+                        list = list.filter(u => !(u.workgroup || '').includes('ผู้พิพากษา'));
+                    }
+
+                    // Filter by Search text
+                    if (this.modalUserSearch.trim()) {
+                        const q = this.modalUserSearch.toLowerCase();
+                        list = list.filter(u =>
+                            (u.fname + u.name + ' ' + u.sname).toLowerCase().includes(q) ||
+                            (u.workgroup || '').toLowerCase().includes(q)
+                        );
+                    }
+
+                    return list;
+                },
+                isCommandMatch(dutyName, commandName) {
+                    if (!dutyName || !commandName) return false;
+                    const d = dutyName.toLowerCase();
+                    const c = commandName.toLowerCase();
+
+                    if (d.includes('หมายจับ') || d.includes('ค้น')) {
+                        return c.includes('หมายจับ') || c.includes('ค้น');
+                    } else if (d.includes('ศาลแขวง')) {
+                        return c.includes('ศาลแขวง');
+                    } else if (d.includes('เปิดทำการ')) {
+                        return c.includes('เปิดทำการ');
+                    } else if (d.includes('ตรวจสอบการจับ')) {
+                        return c.includes('ตรวจสอบการจับ');
+                    }
+                    return d === c;
+                },
+                getFilteredVenComs(v) {
+                    const allComs = this.modal.venComs[v.id] || [];
+                    const filtered = allComs.filter(vc => this.isCommandMatch(v.ven_name, vc.name));
+                    // If no match found, show all to avoid empty list
+                    return filtered.length > 0 ? filtered : allComs;
+                },
+                isNoClaim(v) {
+                    if (!v) return false;
+                    const price = parseFloat(v.price || 0);
+                    if (price <= 0) return true;
+
+                    const com_id = v.ven_com_id;
+                    const com_id_empty = !com_id || (Array.isArray(com_id) && com_id.length === 0);
+                    const com_idb = (v.ven_com_idb || '').toString().trim();
+                    const com_num = (v.ven_com_num_all || '').toString().trim();
+
+                    return com_id_empty &&
+                        (com_idb === '' || com_idb === 'null') &&
+                        (com_num === '' || com_num === 'null');
                 }
             }
         }).mount('#main');
