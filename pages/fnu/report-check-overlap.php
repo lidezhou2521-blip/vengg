@@ -650,7 +650,7 @@ require_once('../../server/authen.php');
                     </select>
                     <input v-model="search" placeholder="🔍 ค้นหาชื่อเจ้าหน้าที่..." />
 
-                    <div class="form-check form-switch ms-3">
+                    <div class="form-check form-switch ms-3 d-none">
                         <input class="form-check-input" type="checkbox" id="showOnlyOverlap" v-model="showOnlyOverlap">
                         <label class="form-check-label fw-bold" for="showOnlyOverlap">แสดงเฉพาะที่มีเวรชน</label>
                     </div>
