@@ -67,283 +67,52 @@ Vue.createApp({
     },
 
     print(vcid, ven_month){
-      // this.isLoading = true
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report.php',{vcid:vcid, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print",print);
-                window.open('./report-print.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print.php?vcid=' + vcid + '&ven_month=' + ven_month, '_blank');
     }, 
     print2(vcid, ven_month){
-      // this.isLoading = true
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report2.php',{vcid:vcid, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print",print);
-                window.open('./report-print2.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print2.php?vcid=' + vcid + '&ven_month=' + ven_month, '_blank');
     }, 
     print3(ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report3.php',{ven_month:ven_month, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print",print);
-                window.open('./report-print3.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print3.php?ven_month=' + ven_month, '_blank');
     }, 
     print4(ven_month,ven_com_num,ven_com_date){
-      axios.post('../../server/asu/report/report4.php',{
-          ven_month:ven_month,
-          ven_com_num:ven_com_num,
-          ven_com_date:ven_com_date,
-        })    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print",print);
-                window.open('./report-print4.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print4.php?ven_month=' + ven_month + '&ven_com_num=' + ven_com_num + '&ven_com_date=' + ven_com_date, '_blank');
     }, 
     print_master(ven_month){
-      axios.post('../../server/asu/report/report_master.php',{ven_month:ven_month})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_master",print);
-                window.open('./report-print-master.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print-master.php?ven_month=' + ven_month, '_blank');
     }, 
     print_warrant(ven_month){
-      this.isLoading = true;
-      axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_warrant", print);
-                window.open('./report-print-warrant.php', '_blank');
-              } else {
-                this.alert('warning', response.data.message, 0);
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
+      window.open('./report-print-warrant.php?ven_month=' + ven_month, '_blank');
     }, 
     print_district_schedule(ven_month){
-      this.isLoading = true;
-      axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_district_schedule", print);
-                window.open('./report-print-district.php', '_blank');
-              } else {
-                this.alert('warning', response.data.message, 0);
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
+      window.open('./report-print-district.php?ven_month=' + ven_month, '_blank');
     }, 
     print_open_court_schedule(ven_month){
-      this.isLoading = true;
-      axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_open_court_schedule", print);
-                window.open('./report-print-open-court.php', '_blank');
-              } else {
-                this.alert('warning', response.data.message, 0);
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
-          })
-          .finally(() => {
-            this.isLoading = false;
-          });
+      window.open('./report-print-open-court.php?ven_month=' + ven_month, '_blank');
     }, 
     print_dutytype(ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report_dutytype.php',{ven_month:ven_month, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_dutytype",print);
-                window.open('./report-print-dutytype.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print-dutytype.php?ven_month=' + ven_month, '_blank');
     }, 
     print5(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report5.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print5",print);
-                window.open('./report-print5.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print5.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end + '&type=all', '_blank');
     }, 
     print5_district(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report5_district.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print5",print);
-                window.open('./report-print5.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print5.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end + '&type=district', '_blank');
     }, 
     print5_release(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report5_release.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print5",print);
-                window.open('./report-print5.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print5.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end + '&type=release', '_blank');
     }, 
     print5_open_court(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report5_release.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print5",print);
-                window.open('./report-print5.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print5.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end + '&type=open_court', '_blank');
     }, 
     print6(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report6.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print6",print);
-                window.open('./report-print6.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print6.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end, '_blank');
     },
     print7(vcid, ven_month){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report7.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print7",print);
-                window.open('./report-print7.php?v=' + Date.now(), '_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
+      window.open('./report-print7.php?vcid=' + vcid + '&ven_month=' + ven_month + '&date_start=' + this.date_start + '&date_end=' + this.date_end, '_blank');
     },
     print_single(ven_month, search_name){
-      let excluded = this.getExcludedDuties(ven_month);
-      axios.post('../../server/asu/report/report_single.php',{ven_month:ven_month, search_name:search_name, excluded_duties: excluded})    
-          .then(response => {
-              if (response.data.status) {
-                var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_single",print);
-                window.open('./report-print-single.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
-              } 
-          })
-          .catch(function (error) {
-              console.log(error);
-          });
-
+      window.open('./report-print-single.php?ven_month=' + ven_month + '&search_name=' + search_name, '_blank');
     }, 
     view(vcid){
       axios.post('../../server/asu/report/report.php',{vcid:vcid})    

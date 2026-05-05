@@ -35,9 +35,9 @@ require_once('../../server/authen.php');
                 <div class="page-break">
                     <div class="text-center mb-4">
                         <h5 class="text-bold">บัญชีรายชื่อข้าราชการฝ่ายตุลาการศาลยุติธรรมและพนักงานราชการ</h5>
-                        <h5 class="text-bold">แนบท้ายคำสั่งศาล ที่ {{datas.vc.ven_com_num}} ลงวันที่ {{date_thai(datas.vc.ven_com_date)}}</h5>
+                        <h5 class="text-bold">แนบท้ายคำสั่งศาล ที่ {{toThaiNum(datas.vc.ven_com_num)}} ลงวันที่ {{toThaiNum(date_thai(datas.vc.ven_com_date))}}</h5>
                         <h7 class="text-bold">เรื่อง ให้ข้าราชการฝ่ายตุลาการศาลยุติธรรม พนักงานราชการและลูกจ้างปฏิบัติงานนอกเวลาราชการ และในวันหยุดราชการ</h7>
-                        <h7 class="text-bold">ประจำเดือน {{datas.vc.ven_month_th}}</h7>
+                        <h7 class="text-bold">ประจำเดือน {{toThaiNum(datas.vc.ven_month_th)}}</h7>
                     </div>
 
                     <table class="table table-bordered text-center" v-for="(day, index) in page" :key="index">
@@ -57,8 +57,8 @@ require_once('../../server/authen.php');
                             <tr v-for="(row, rIndex) in day.rows" :key="rIndex">
                                 <td v-if="rIndex === 0" :rowspan="day.rows.length">
                                     <span class="text-bold">{{date_thai_day_only(day.ven_date)}}</span><br>
-                                    ที่ {{date_thai_num(day.ven_date)}}<br>
-                                    (เวลา {{day.ven_time}}-16.30 น.)
+                                    ที่ {{toThaiNum(date_thai_num(day.ven_date))}}<br>
+                                    (เวลา {{toThaiNum(day.ven_time)}}-{{toThaiNum('16.30')}} น.)
                                 </td>
                                 <td class="text-start">{{row.judge_name}}</td>
                                 <td class="text-start">{{row.staff_name}}</td>
@@ -80,6 +80,7 @@ require_once('../../server/authen.php');
     </div>
 
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
+    <script src="../../node_modules/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
       Vue.createApp({
@@ -88,15 +89,15 @@ require_once('../../server/authen.php');
             chunkedData() {
                 if(!this.datas.respJSON) return [];
                 const data = this.datas.respJSON.map(d => {
-                    const jLen = d.u_namej.length;
-                    const sLen = d.u_staff.length;
+                    const jLen = (d.u_namej && d.u_namej.length) ? d.u_namej.length : 0;
+                    const sLen = (d.u_staff && d.u_staff.length) ? d.u_staff.length : 0;
                     const maxRows = Math.max(jLen, sLen, 1);
                     const rows = [];
                     for(let i=0; i<maxRows; i++){
                         rows.push({
-                            judge_name: i < jLen ? d.u_namej[i] : '',
-                            staff_name: i < sLen ? d.u_staff[i].name : '',
-                            staff_duty: i < sLen ? d.u_staff[i].duty : ''
+                            judge_name: (d.u_namej && d.u_namej[i]) ? d.u_namej[i] : '',
+                            staff_name: (d.u_staff && d.u_staff[i]) ? d.u_staff[i].name : '',
+                            staff_duty: (d.u_staff && d.u_staff[i]) ? d.u_staff[i].duty : ''
                         });
                     }
                     d.rows = rows;
@@ -110,9 +111,46 @@ require_once('../../server/authen.php');
                 return chunks;
             }
         },
-        mounted(){
-          const printData = localStorage.getItem("print5")
-          if (printData) { this.datas = JSON.parse(printData) }
+        mounted() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const vcid = urlParams.get('vcid');
+          const venMonth = urlParams.get('ven_month');
+          const dateStart = urlParams.get('date_start');
+          const dateEnd = urlParams.get('date_end');
+          const type = urlParams.get('type');
+
+          if (vcid && type) {
+            let api = '../../server/asu/report/report5.php';
+            if (type === 'district') api = '../../server/asu/report/report5_district.php';
+            if (type === 'release') api = '../../server/asu/report/report5_release.php';
+            if (type === 'open_court') api = '../../server/asu/report/report5_release.php';
+
+            let excluded = [];
+            if (venMonth) {
+              let stored = localStorage.getItem('excluded_duties_' + venMonth);
+              excluded = stored ? JSON.parse(stored) : [];
+            }
+
+            axios.post(api, {
+                vcid: vcid,
+                date_start: dateStart,
+                date_end: dateEnd,
+                excluded_duties: excluded
+              })
+              .then(response => {
+                if (response.data.status) {
+                  this.datas = response.data;
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching data:", error);
+              });
+          } else {
+            const printData = localStorage.getItem("print5")
+            if (printData) {
+              this.datas = JSON.parse(printData)
+            }
+          }
         },
         methods: {
           exportPDF() {
@@ -191,6 +229,11 @@ require_once('../../server/authen.php');
             var dayNames = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"];
             var d = new Date(day);
             return dayNames[d.getDay()];
+          },
+          toThaiNum(num) {
+            if (num === null || num === undefined) return '';
+            const thaiNums = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+            return num.toString().replace(/\d/g, match => thaiNums[match]);
           }
         }
       }).mount('#app')

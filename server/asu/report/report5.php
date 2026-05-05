@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LEFT JOIN ven_name AS vn ON v.vn_id = vn.id
                 WHERE v.ven_month = :ven_month 
                     AND (v.status=1 OR v.status=2) 
-                    AND (vn.name LIKE '%ศาลแขวงและพิจารณาคำร้องขอปล่อยชั่วคราว%' OR vn.name LIKE '%เวรเปิดทำการพิจารณาคำร้องขอปล่อยชั่วคราว%')
+                    AND (vn.name LIKE '%ศาลแขวง%' OR vn.name LIKE '%ปล่อยชั่วคราว%')
                     $sql_date
                 ORDER BY v.ven_date ASC, v.ven_time ASC";
         $query = $conn->prepare($sql);

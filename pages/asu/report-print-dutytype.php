@@ -199,10 +199,13 @@ require_once('../../server/authen.php');
                         'warrant-row': row.duty.ven_name.includes('หมายจับ') || row.duty.ven_name.includes('หมายค้น')
                     }">
                     <td class="col-name-type">
-                        <div v-if="rIdx === 0" style="font-weight:bold; text-decoration:underline; font-size: 14px;">{{person.name}}</div>
+                        <div v-if="rIdx === 0" style="font-weight:bold; text-decoration:underline; font-size: 14px;">
+                            {{person.name}}
+                            <span style="color: #2e7d32; text-decoration: none !important; font-size: 13px;"> [รวม {{formatNum(getPersonTotal(person))}}บ.]</span>
+                        </div>
                         <div :style="'font-size: 13px; ' + (rIdx === 0 || row.type === 'excluded' ? 'padding-left:12px; ' : '') + (row.type === 'excluded' ? 'color:#c62828; font-style:italic;' : '')">
                             {{formatDutyName(row.duty.ven_name)}}
-                            <span v-if="row.duty.price_per > 0" style="font-size: 11px; color: #666;"> (฿{{formatNum(row.duty.price_per)}})</span>
+                            <span v-if="row.duty.price_per > 0" style="font-size: 11px; color: #666;"> (฿{{formatNum(row.duty.price_per)}}/วัน)</span>
                             <span v-if="row.type === 'excluded'"> (ไม่เบิก)</span>
                             <span v-else-if="row.duty.no_claim" class="no-claim">ไม่เบิก</span>
                         </div>
@@ -234,6 +237,7 @@ require_once('../../server/authen.php');
     </div>
 
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
+    <script src="../../node_modules/axios/dist/axios.min.js"></script>
     <script>
         const {
             createApp
@@ -250,9 +254,30 @@ require_once('../../server/authen.php');
                 }
             },
             mounted() {
-                const printData = localStorage.getItem("print_dutytype")
-                if (printData) {
-                    this.datas = JSON.parse(printData)
+                const urlParams = new URLSearchParams(window.location.search);
+                const venMonth = urlParams.get('ven_month');
+
+                if (venMonth) {
+                    let stored = localStorage.getItem('excluded_duties_' + venMonth);
+                    let excluded = stored ? JSON.parse(stored) : [];
+
+                    axios.post('../../server/asu/report/report_dutytype.php', {
+                            ven_month: venMonth,
+                            excluded_duties: excluded
+                        })
+                        .then(response => {
+                            if (response.data.status) {
+                                this.datas = response.data;
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error fetching data:", error);
+                        });
+                } else {
+                    const printData = localStorage.getItem("print_dutytype")
+                    if (printData) {
+                        this.datas = JSON.parse(printData)
+                    }
                 }
             },
             methods: {
@@ -297,6 +322,14 @@ require_once('../../server/authen.php');
                     if (name === 'เวรเปิดทำการพิจารณาคำร้องขอปล่อยชั่วคราว') return 'เวรฯขอปล่อยชั่วคราว';
                     return name;
                 },
+                getPersonTotal(person) {
+                    if (!person || !person.duties) return 0;
+                    return person.duties.reduce((sum, duty) => {
+                        // Only count duties that are not 'no_claim'
+                        if (duty.no_claim) return sum;
+                        return sum + (Number(duty.total) || 0);
+                    }, 0);
+                }
 
             }
         }).mount('#app')

@@ -97,10 +97,41 @@ require_once('../../server/authen.php');
         datas:''     
       }
     },
-    mounted(){   
-      this.datas = JSON.parse(localStorage.getItem("print"))
-      localStorage.removeItem("print")
-      // window.print()
+    mounted() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const vcid = urlParams.get('vcid');
+      const venMonth = urlParams.get('ven_month');
+
+      if (vcid) {
+        // Fetch excluded duties if venMonth is provided
+        let excluded = [];
+        if (venMonth) {
+          let stored = localStorage.getItem('excluded_duties_' + venMonth);
+          excluded = stored ? JSON.parse(stored) : [];
+        }
+
+        axios.post('../../server/asu/report/report.php', {
+            vcid: vcid,
+            excluded_duties: excluded
+          })
+          .then(response => {
+            if (response.data.status) {
+              this.datas = response.data;
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching data:", error);
+          });
+      } else {
+        const printData = localStorage.getItem("print");
+        if (printData) {
+          try {
+            this.datas = JSON.parse(printData);
+          } catch (e) {
+            console.error("Error parsing printData", e);
+          }
+        }
+      }
     },
     methods: {    
       

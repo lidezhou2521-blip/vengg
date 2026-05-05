@@ -109,10 +109,36 @@ require_once('../../server/authen.php');
         datas:''     
       }
     },
-    mounted(){   
-      this.datas = JSON.parse(localStorage.getItem("print"))
-      // localStorage.removeItem("print")
-      // window.print()
+    mounted() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const venMonth = urlParams.get('ven_month');
+      const venComNum = urlParams.get('ven_com_num');
+      const venComDate = urlParams.get('ven_com_date');
+
+      if (venMonth) {
+        axios.post('../../server/asu/report/report4.php', {
+            ven_month: venMonth,
+            ven_com_num: venComNum,
+            ven_com_date: venComDate
+          })
+          .then(response => {
+            if (response.data.status) {
+              this.datas = response.data;
+            }
+          })
+          .catch(error => {
+            console.error("Error fetching data:", error);
+          });
+      } else {
+        const printData = localStorage.getItem("print");
+        if (printData) {
+          try {
+            this.datas = JSON.parse(printData);
+          } catch (e) {
+            console.error("Error parsing printData", e);
+          }
+        }
+      }
     },
     methods: {    
       

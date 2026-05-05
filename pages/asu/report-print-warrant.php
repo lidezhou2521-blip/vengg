@@ -94,6 +94,13 @@ require_once('../../server/authen.php');
             }
             .report-header { background-color: #34ace0 !important; -webkit-print-color-adjust: exact; }
             .table th { background-color: white !important; -webkit-print-color-adjust: exact; }
+            .bg-comment {
+                background-color: #e0e0e0 !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+        .bg-comment {
+            background-color: #e0e0e0;
         }
     </style>  
     </head>
@@ -124,9 +131,17 @@ require_once('../../server/authen.php');
                     <tr v-for="(u, index) in allUsers" :key="u.uid" class="row-hover">
                         <td>{{index + 1}}</td>
                         <td class="col-name text-nowrap">{{u.name}}</td>
-                        <td v-for="d in datas.dates" :key="d.ven_date">
-                            <span v-if="hasDuty(u.dates, d.ven_date)" class="tick">✓</span>
+                        <td v-if="u.comment" :colspan="datas.dates.length" class="bg-comment text-center" style="font-size: 11px;">
+                            {{u.comment}} 
+                            <span v-if="getDutyDates(u.dates)" class="ms-2 text-primary">
+                                (เข้าเวรวันที่: {{getDutyDates(u.dates)}})
+                            </span>
                         </td>
+                        <template v-else>
+                            <td v-for="d in datas.dates" :key="d.ven_date">
+                                <span v-if="hasDuty(u.dates, d.ven_date)" class="tick">✓</span>
+                            </td>
+                        </template>
                     </tr>
                 </tbody>
             </table>
@@ -136,13 +151,14 @@ require_once('../../server/authen.php');
             <button class="btn btn-primary btn-lg px-5 shadow" onclick="window.print()">
                 <i class="bi bi-printer"></i> พิมพ์เอกสาร
             </button>
-            <button class="btn btn-outline-secondary btn-lg ms-3" onclick="window.history.back()">
+            <button class="btn btn-outline-secondary btn-lg ms-3" onclick="window.close()">
                 กลับ
             </button>
         </div>
     </div>
 
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
+    <script src="../../node_modules/axios/dist/axios.min.js"></script>
     <script>
       const { createApp } = Vue
       createApp({
@@ -155,11 +171,16 @@ require_once('../../server/authen.php');
           allUsers() {
             if (!this.datas || !this.datas.groups) return [];
             let users = [];
-            for (const groupName in this.datas.groups) {
-              // ในตารางคิวเวรหมายจับ โดยปกติจะไม่เอาผู้พิพากษามารวมในรายการเจ้าหน้าที่
-              if (groupName === 'ผู้พิพากษา') continue;
+            for (const gKey in this.datas.groups) {
+              const groupData = this.datas.groups[gKey];
+              const gName = groupData.name;
+
+              // แสดงเฉพาะเวร ID 25 (เวรหมายจับฯ)
+              if (groupData.vn_id != 25) continue;
               
-              const groupData = this.datas.groups[groupName];
+              // ในตารางคิวเวรหมายจับ โดยปกติจะไม่เอาผู้พิพากษามารวมในรายการเจ้าหน้าที่
+              if (gName === 'ผู้พิพากษา') continue;
+              
               const groupUsers = groupData.users || {};
               let currentGroupUsers = [];
               if (Array.isArray(groupUsers)) {
@@ -170,14 +191,21 @@ require_once('../../server/authen.php');
               users = users.concat(currentGroupUsers);
             }
             
-            // Filter: only users who have at least one Warrant/Search duty
-            users = users.filter(u => {
-                if (!u.dates || !Array.isArray(u.dates)) return false;
-                return u.dates.some(d => {
-                    const dName = typeof d === 'object' ? (d.ven_name || '') : '';
-                    return dName.includes('หมายจับ') || dName.includes('หมายค้น');
-                });
+            // Deduplicate by uid or name
+            const uniqueUsers = [];
+            const userKeys = new Set();
+            users.forEach(u => {
+                if (!u) return;
+                const key = u.uid || u.id || u.name;
+                if (key && !userKeys.has(key)) {
+                    userKeys.add(key);
+                    uniqueUsers.push(u);
+                }
             });
+            users = uniqueUsers;
+            
+            // ไม่ต้องกรอง user ออก เพื่อให้แสดงครบทุกคนในทำเนียบ (เช่น 31 คน)
+            // users = users.filter(u => { ... });
 
             // Sort: numerically by order, then by name
             return users.sort((a, b) => {
@@ -188,13 +216,30 @@ require_once('../../server/authen.php');
             });
           }
         },
-        mounted(){
-          const printData = localStorage.getItem("print_warrant")
-          if (printData) {
-            try {
-              this.datas = JSON.parse(printData);
-            } catch (e) {
-              console.error("Error parsing printData", e);
+        mounted() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const venMonth = urlParams.get('ven_month');
+
+          if (venMonth) {
+            axios.post('../../server/asu/report/report_groups.php', {
+                ven_month: venMonth
+              })
+              .then(response => {
+                if (response.data.status) {
+                  this.datas = response.data;
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching data:", error);
+              });
+          } else {
+            const printData = localStorage.getItem("print_warrant")
+            if (printData) {
+              try {
+                this.datas = JSON.parse(printData);
+              } catch (e) {
+                console.error("Error parsing printData", e);
+              }
             }
           }
         },
@@ -206,11 +251,23 @@ require_once('../../server/authen.php');
             if (!userDates || !Array.isArray(userDates)) return false;
             return userDates.some(d => {
               const dDate = typeof d === 'string' ? d : d.date;
-              const dName = typeof d === 'object' ? (d.ven_name || '') : '';
               if (dDate !== targetDate) return false;
-              // เฉพาะเวรหมายจับ/หมายค้น
-              return dName.includes('หมายจับ') || dName.includes('หมายค้น');
+              // เฉพาะเวรหมายจับ/หมายค้น (vn_id 25)
+              return d.vn_id == 25;
             });
+          },
+          getDutyDates(userDates) {
+            if (!userDates || !Array.isArray(userDates)) return '';
+            return userDates
+              .filter(d => {
+                return d.vn_id == 25;
+              })
+              .map(d => {
+                const dateStr = typeof d === 'string' ? d : d.date;
+                return new Date(dateStr).getDate();
+              })
+              .sort((a, b) => a - b)
+              .join(', ');
           }
         }
       }).mount('#app')

@@ -52,12 +52,38 @@ require_once('../../server/authen.php');
     </div>
 
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
+    <script src="../../node_modules/axios/dist/axios.min.js"></script>
     <script>
       Vue.createApp({
         data() { return { datas: { respJSON: [] } } },
-        mounted(){
-          const printData = localStorage.getItem("print_single")
-          if (printData) { this.datas = JSON.parse(printData) }
+        mounted() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const venMonth = urlParams.get('ven_month');
+          const searchName = urlParams.get('search_name');
+
+          if (venMonth) {
+            let stored = localStorage.getItem('excluded_duties_' + venMonth);
+            let excluded = stored ? JSON.parse(stored) : [];
+
+            axios.post('../../server/asu/report/report_single.php', {
+                ven_month: venMonth,
+                search_name: searchName,
+                excluded_duties: excluded
+              })
+              .then(response => {
+                if (response.data.status) {
+                  this.datas = response.data;
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching data:", error);
+              });
+          } else {
+            const printData = localStorage.getItem("print_single")
+            if (printData) {
+              this.datas = JSON.parse(printData)
+            }
+          }
         },
         methods: {
           date_thai(day){

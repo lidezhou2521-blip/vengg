@@ -110,6 +110,9 @@ require_once('../../server/authen.php');
       line-height: 1.2;
       text-align: left;
     }
+    .col-duty-sm {
+      font-size: 9.5px !important;
+    }
 
     .col-remark {
       width: 120px;
@@ -156,6 +159,15 @@ require_once('../../server/authen.php');
         background-color: #a29bfe !important;
         -webkit-print-color-adjust: exact;
       }
+
+      .bg-comment {
+        background-color: #e0e0e0 !important;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+
+    .bg-comment {
+      background-color: #e0e0e0;
     }
   </style>
 </head>
@@ -201,11 +213,19 @@ require_once('../../server/authen.php');
             <tr v-for="(u, uIndex) in group.users" :key="u.uid">
               <td class="text-center">{{uIndex + 1}}</td>
               <td>{{u.name}}</td>
-              <td v-for="d in filteredDates" :key="d.ven_date">
-                <span v-if="hasDuty(u.dates, d.ven_date)" class="tick">✓</span>
+              <td v-if="u.comment" :colspan="filteredDates.length" class="bg-comment text-center" style="font-size: 11px;">
+                {{u.comment}}
+                <span v-if="getDutyDates(u.dates)" class="ms-2 text-primary">
+                  (เข้าเวรวันที่: {{getDutyDates(u.dates)}})
+                </span>
               </td>
+              <template v-else>
+                <td v-for="d in filteredDates" :key="d.ven_date">
+                  <span v-if="hasDuty(u.dates, d.ven_date)" class="tick">✓</span>
+                </td>
+              </template>
               <!-- Responsibility spans all rows of group -->
-              <td v-if="uIndex === 0" :rowspan="group.users.length" class="col-duty">
+              <td v-if="uIndex === 0" :rowspan="group.users.length" :class="['col-duty', {'col-duty-sm': group.name === 'งานประชาสัมพันธ์'}]">
                 {{getResponsibility(group.name)}}
               </td>
               <td v-if="uIndex === 0" :rowspan="group.users.length" class="col-remark">
@@ -221,13 +241,14 @@ require_once('../../server/authen.php');
       <button class="btn btn-primary btn-lg px-5 shadow" onclick="window.print()">
         <i class="bi bi-printer"></i> พิมพ์เอกสาร
       </button>
-      <button class="btn btn-outline-secondary btn-lg ms-3" onclick="window.history.back()">
+      <button class="btn btn-outline-secondary btn-lg ms-3" onclick="window.close()">
         กลับ
       </button>
     </div>
   </div>
 
   <script src="../../node_modules/vue/dist/vue.global.js"></script>
+  <script src="../../node_modules/axios/dist/axios.min.js"></script>
   <script>
     const {
       createApp
@@ -242,9 +263,9 @@ require_once('../../server/authen.php');
           responsibilities: {
             'หัวหน้ากลุ่ม': 'ทำหน้าที่เป็นหัวหน้ากลุ่ม ตรวจสอบและช่วยเหลือทุกงาน เมื่อมีปัญหาข้อขัดข้องในการปฏิบัติงาน ตรวจสอบความถูกต้องของหมายต่างๆ และหนังสือแจ้งหน่วยงานภายนอก',
             'งานการเงิน': 'ปฏิบัติหน้าที่รับเงินค่าปรับพินิจ เงินกลาง ส่งมอบเงินให้กับคณะกรรมการเก็บรักษาเงิน และจัดทำเอกสารทางการเงินและบันทึกบัญชี',
-            'งานรับฟ้อง': 'งานรับฟ้อง ปฏิบัติหน้าที่รับคำฟ้อง จัดทำสำนวน จัดทำสารบบความและสารบบคำพิพากษา ข.4 สอบคำให้การ ออกหมายตามคำพิพากษา พิมพ์หนังสือแจ้งคำสั่งศาลสืบเสาะและพินิจ (คป.1) พิมพ์หนังสือแจ้งคำสั่งศาล (คป.4) คำร้องขอหมายจับและหมายค้น ส่งตัวตามหมายจับและเพิกถอนหมายจับในระบบ AWIS ค้นสำนวน ออกหมายตามคำสั่งศาล ตรวจสอบการจับและมอบตัว พิมพ์หนังสือรายการแจ้งหน่วยงานที่เกี่ยวข้อง และสแกนเอกสารที่เกี่ยวข้องในระบบ',
+            'งานรับฟ้อง': 'งานรับฟ้อง ปฏิบัติหน้าที่รับคำฟ้อง จัดทำสำนวน จัดทำสารบบความและสารบบคำพิพากษา ข4 สอบคำให้การ ออกหมายตามคำพิพากษา พิมพ์หนังสือแจ้งคำสั่งศาลสืบเสาะและพินิจ (คป.1) พิมพ์หนังสือแจ้งคำสั่งศาล (คป.4) คำร้องขอหมายจับและหมายค้น ส่งตัวตามหมายจับและ  เพิกถอนหมายจับในระบบ AWIS ค้นหาสำนวน ออกหมายตามคำสั่งศาล ตรวจสอบการจับและมอบตัว  พิมพ์หนังสือราชการแจ้งหน่วยงานที่เกี่ยวข้อง และสแกนเอกสารที่เกี่ยวข้องในระบบ',
             'งานผัดฟ้อง-ฝากขัง': 'งานผัดฟ้อง-ฝากขัง ปฏิบัติหน้าที่รับคำร้อง เสนอสำนวน จัดเตรียมความพร้อมของระบบทางไกลผ่านจอภาพ ประสานเจ้าหน้าที่เรือนจำรับหมาย และสแกนเอกสารที่เกี่ยวข้องในระบบ',
-            'งานประชาสัมพันธ์': 'ปฏิบัติหน้าที่ให้คำแนะนำปรึกษาทางกฎหมาย และสิทธิในการปล่อยตัวชั่วคราวผู้ต้องหาหรือจำเลย รวบรวมข้อมูลเพื่อประเมินความเสี่ยงในการปล่อยตัวชั่วคราว (บ.ค.3) ประสานงานผู้ช่วยหน้าศาล (กำกับดูแลผู้ถูกปล่อยตัวชั่วคราว) จัดทำคำขอรับเงินรางวัลของผู้กำกับดูแล (คำขอ บ.ค.5) ซึ่งทำหน้าที่ดูแลผู้ปล่อยตัวชั่วคราว พิจารณาคำร้องขอปล่อยตัวชั่วคราว รับคำสั่งและเงื่อนไขการปล่อยตัวชั่วคราวเบื้องต้น สิทธิเรียกร้องค่าทดแทนผู้เสียหายและจำเลยในคดีอาญา (คัดแจ้งสิทธิ) ประสานงานศูนย์รับคำปรึกษา แนะนำข้อมูลประวัติ และสถานะความพร้อมของอุปกรณ์ EM การจัดทำและติดตั้งอุปกรณ์ EM บันทึกสัญญาประกันและเงื่อนไขการปล่อยตัวชั่วคราว จัดทำคำสั่งศาลปล่อยตัวชั่วคราวกรณีศาลอนุญาตให้ปล่อยตัวชั่วคราว ตรวจสอบประวัติอาชญากรเบื้องต้นในระบบ AWIS พิมพ์คำร้องรับ/ส่งเงิน และจัดทำบัญชีคุมหลักประกัน รับคำขอและออกใบรับหลักประกัน จัดทำทะเบียนประกันและใบบันทึกบันทึกประกัน ตรวจสอบหลักประกันทางทะเบียนและประเมินมูลค่าหลักประกันเบื้องต้น (เช่น ที่ดิน ห้องชุด รถยนต์) พิมพ์หนังสือแจ้งห้องขังและพิมพ์หนังสือคำสั่งศาลปล่อยตัวชั่วคราว (ผ.3, ผ.11, ผ.12) จัดทำใบรายงานตัว ตรวจสอบหลักประกัน พิมพ์สัญญาประกันและใบแจ้งเงินประกัน/หลักประกัน ตรวจสอบความถูกต้องครบถ้วนของข้อมูลในระบบ'
+            'งานประชาสัมพันธ์': 'ปฏิบัติหน้าที่ให้คำแนะนำปรึกษาด้านกฎหมาย แจ้งสิทธิการปล่อยชั่วคราวให้แก่ผู้ต้องหาหรือจำเลยหรือญาติ แจ้งหน้าที่ผู้ขอประกันให้แก่ผู้ประกัน รวบรวม ตรวจสอบข้อมูลผู้ขอประกัน ข้อมูลคดี เพื่อประกอบการจัดทำคำร้องขอปล่อยชั่วคราว รวบรวมข้อมูลเพื่อประเมินความเสี่ยงการปล่อยชั่วคราว (บ.ส.3) ประสานงานผู้จะทำหน้าที่ผู้กำกับดูแลผู้ถูกปล่อยชั่วคราว จัดทำคำร้องขอปล่อยชั่วคราวก่อนวางหลักประกัน (คำร้องใบเดียว) ชั้นฝากขัง/พิจารณา/อุทธรณ์/ฎีกา ตรวจสอบเอกสารแสดงตัวตนผู้ขอประกัน และเอกสารหลักฐานเกี่ยวกับหลักประกัน จัดทำคำร้องขอปล่อยชั่วคราว คำสาบานตน สัญญาประกัน รวบรวมข้อมูล บันทึกแบบแสดงความประสงค์ขอใช้อุปกรณ์อิเล็กทรอนิกส์ (EM) นำข้อมูลเข้าระบบ EM ประสานงานศูนย์ EM จัดเตรียมและติดตั้งอุปกรณ์ EM บันทึกการรับ-จ่ายอุปกรณ์ EM ให้ผู้ต้องหาหรือจำเลย จัดทำคำสั่งแต่งตั้งผู้กำกับดูแล พิมพ์หนังสือแจ้งผู้กำกับดูแล จัดทำหนังสือแจ้งคำสั่งห้ามออกนอกประเทศ ส่งคำสั่งผ่านระบบ WLIS จัดทำหนังสือแจ้งอายัดหลักประกัน แจ้งหน่วยงานต้นสังกัดผู้ประกัน จัดทำหมายปล่อย จัดทำใบปล่อยตัว แจ้งการปล่อยตัวจำเลยให้ตำรวจผู้ควบคุมทราบ จัดทำบัตรนัดให้ผู้ต้องหาหรือจำเลยเพื่อรายงานตัว รับคำร้องอุทธรณ์คำสั่งศาลชั้นต้นที่ไม่อนุญาตให้ปล่อยชั่วคราว ส่งคำร้องอุทธรณ์ และรับคำสั่งศาลสูงผ่านระบบอิเล็กทรอนิสก์ แจ้งการรับคำสั่ง แจ้งการอ่านผ่านระบบอิเล็กทรอนิสก์ เตรียมความพร้อมระบบจอภาพระหว่างศาล-เรือนจำ จัดทำหมายเบิก ประสานงานเรือนจำเบิกตัวผู้ต้องขังเพื่อฟังคำสั่งปล่อยชั่วคราว/ติดตั้งEM สแกนสำนวนในส่วนที่เกี่ยวข้อง บันทึกรายการคำร้องขอปล่อยชั่วคราวในสมุดคุมปล่อยชั่วคราว/สมุดคุมติดตั้ง EM จัดทำรายงานการปล่อยชั่วคราวประจำวัน จัดทำคำร้องขอทำงานบริการสังคมแทนค่าปรับ (บ.ส.1, บ.ส.2) จัดทำใบนัดรายงานตัว จัดทำหนังสือแจ้งสำนักงานคุมประพฤติ บันทึกสมุดคุมการทำงานบริการสังคมแทนค่าปรับ จัดทำคำร้อง คำขอ คำแถลงอื่นใดที่เกี่ยวข้องกับการปล่อยชั่วคราวหรือเพื่อการคุ้มครองสิทธิและเสรีภาพของผู้ต้องหาหรือจำเลย'
           }
         }
       },
@@ -255,21 +276,27 @@ require_once('../../server/authen.php');
           // วนลูปตามกลุ่มที่มีในข้อมูล
           const categories = ['หัวหน้ากลุ่ม', 'งานการเงิน', 'งานรับฟ้อง', 'งานผัดฟ้อง-ฝากขัง', 'งานประชาสัมพันธ์'];
 
-          for (const gName in this.datas.groups) {
-            if (gName === 'ผู้พิพากษา') continue;
-            
-            // แสดงเฉพาะกลุ่มงานที่เกี่ยวข้องกับรายงานนี้
-            if (!categories.some(key => gName.includes(key))) continue;
+          for (const gKey in this.datas.groups) {
+            const groupData = this.datas.groups[gKey];
+            const gName = groupData.name;
 
-            const groupData = this.datas.groups[gName];
+            if (gName === 'ผู้พิพากษา') continue;
+
+            // แสดงเฉพาะกลุ่มงานที่เกี่ยวข้องกับรายงานนี้ และเฉพาะเวร ID 27 (เวรแขวงฯ)
+            if (groupData.vn_id != 27) continue;
+            if (!categories.some(key => gName.includes(key))) continue;
             const users = Object.values(groupData.users || {});
             if (users.length === 0) continue;
 
             result.push({
-                name: gName,
-                srt: parseInt(groupData.vns_srt) || 999,
-                groupId: groupData.vns_group_id, // Store Group_id
-                users: users
+              name: gName,
+              srt: parseInt(groupData.vns_srt) || 999,
+              groupId: groupData.vns_group_id,
+              vn_id: groupData.vn_id, // Store vn_id
+              users: users.map(user => ({
+                ...user,
+                comment: user.comment // Ensure comment is passed
+              }))
             });
           }
 
@@ -280,7 +307,7 @@ require_once('../../server/authen.php');
           result.forEach(group => {
             group.users.sort((a, b) => (parseInt(a.order) || 999) - (parseInt(b.order) || 999));
           });
-          
+
           return result;
         },
         filteredDates() {
@@ -303,12 +330,29 @@ require_once('../../server/authen.php');
         }
       },
       mounted() {
-        const printData = localStorage.getItem("print_district_schedule")
-        if (printData) {
-          try {
-            this.datas = JSON.parse(printData);
-          } catch (e) {
-            console.error("Error parsing printData", e);
+        const urlParams = new URLSearchParams(window.location.search);
+        const venMonth = urlParams.get('ven_month');
+
+        if (venMonth) {
+          axios.post('../../server/asu/report/report_groups.php', {
+              ven_month: venMonth
+            })
+            .then(response => {
+              if (response.data.status) {
+                this.datas = response.data;
+              }
+            })
+            .catch(error => {
+              console.error("Error fetching data:", error);
+            });
+        } else {
+          const printData = localStorage.getItem("print_district_schedule")
+          if (printData) {
+            try {
+              this.datas = JSON.parse(printData);
+            } catch (e) {
+              console.error("Error parsing printData", e);
+            }
           }
         }
       },
@@ -340,6 +384,17 @@ require_once('../../server/authen.php');
             if (dDate !== targetDate) return false;
             return d.vn_id == 27;
           });
+        },
+        getDutyDates(userDates) {
+          if (!userDates || !Array.isArray(userDates)) return '';
+          return userDates
+            .filter(d => d.vn_id == 27)
+            .map(d => {
+              const dateStr = typeof d === 'string' ? d : d.date;
+              return new Date(dateStr).getDate();
+            })
+            .sort((a, b) => a - b)
+            .join(', ');
         }
       }
     }).mount('#app')

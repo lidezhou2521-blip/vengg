@@ -80,6 +80,7 @@ require_once('../../server/authen.php');
     </div>
 
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
+    <script src="../../node_modules/axios/dist/axios.min.js"></script>
     <script>
       Vue.createApp({
         data() { return { datas: { respJSON: [], vc: {} } } },
@@ -94,9 +95,40 @@ require_once('../../server/authen.php');
                 return chunks;
             }
         },
-        mounted(){
-          const printData = localStorage.getItem("print7")
-          if (printData) { this.datas = JSON.parse(printData) }
+        mounted() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const vcid = urlParams.get('vcid');
+          const venMonth = urlParams.get('ven_month');
+          const dateStart = urlParams.get('date_start');
+          const dateEnd = urlParams.get('date_end');
+
+          if (vcid) {
+            let excluded = [];
+            if (venMonth) {
+              let stored = localStorage.getItem('excluded_duties_' + venMonth);
+              excluded = stored ? JSON.parse(stored) : [];
+            }
+
+            axios.post('../../server/asu/report/report7.php', {
+                vcid: vcid,
+                date_start: dateStart,
+                date_end: dateEnd,
+                excluded_duties: excluded
+              })
+              .then(response => {
+                if (response.data.status) {
+                  this.datas = response.data;
+                }
+              })
+              .catch(error => {
+                console.error("Error fetching data:", error);
+              });
+          } else {
+            const printData = localStorage.getItem("print7")
+            if (printData) {
+              this.datas = JSON.parse(printData)
+            }
+          }
         },
         methods: {
           exportWord() {
