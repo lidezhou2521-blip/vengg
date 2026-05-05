@@ -27,19 +27,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dates = $query_dates->fetchAll(PDO::FETCH_ASSOC);
 
         // 2. Get all duties and user profile info
-        $sql_all = "SELECT v.ven_date, v.user_id, v.u_role, p.fname, p.name, p.sname, p.workgroup, p.dep
+        $sql_all = "SELECT v.ven_date, v.user_id, v.u_role, v.vn_id, 
+                           COALESCE(vn.name, v.ven_name) as ven_name, 
+                           p.fname, p.name, p.sname, p.workgroup as p_workgroup, p.dep, 
+                           vns.name as vns_group,
+                           COALESCE(vu.order, p.st, 999) as `order`
                     FROM ven v
                     INNER JOIN profile p ON v.user_id = p.id
+                    LEFT JOIN ven_name vn ON v.vn_id = vn.id
+                    LEFT JOIN ven_user vu ON v.user_id = vu.user_id AND v.vn_id = vu.vn_id
+                    LEFT JOIN ven_name_sub vns ON vu.vns_id = vns.id
                     WHERE v.ven_month = :ven_month AND (v.status = 1 OR v.status = 2)
-                    ORDER BY p.workgroup ASC, p.name ASC, v.ven_date ASC";
+                    ORDER BY vns.srt ASC, vu.order ASC, p.name ASC, v.ven_date ASC";
         $query_all = $conn->prepare($sql_all);
         $query_all->execute([':ven_month' => $ven_month]);
         $all_data = $query_all->fetchAll(PDO::FETCH_OBJ);
 
-        // 3. Group by workgroup and user
+        // 3. Group by vnu_group (กลุ่มหน้าที่) and user
         $groups = array();
         foreach ($all_data as $row) {
-            $wg = $row->workgroup ? $row->workgroup : 'ไม่ระบุกลุ่มงาน';
+            // ใช้ vns_group (กลุ่มหน้าที่) ก่อน ถ้าไม่มีค่อยใช้กลุ่มงานในโปรไฟล์
+            $wg = $row->vns_group ? $row->vns_group : ($row->p_workgroup ? $row->p_workgroup : 'ไม่ระบุกลุ่ม');
+            
             if (!isset($groups[$wg])) {
                 $groups[$wg] = array();
             }
@@ -47,12 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $groups[$wg][$row->user_id] = array(
                     'name'   => $row->fname . $row->name . ' ' . $row->sname,
                     'u_role' => $row->u_role,
+                    'order'  => $row->order,
                     'dates'  => array()
                 );
             }
-            if (!in_array($row->ven_date, $groups[$wg][$row->user_id]['dates'])) {
-                $groups[$wg][$row->user_id]['dates'][] = $row->ven_date;
-            }
+            // Store date, ven_name, and vn_id
+            $groups[$wg][$row->user_id]['dates'][] = array(
+                'date' => $row->ven_date,
+                'ven_name' => $row->ven_name,
+                'vn_id' => $row->vn_id
+            );
         }
 
         http_response_code(200);

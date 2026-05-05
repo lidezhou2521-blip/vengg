@@ -171,12 +171,31 @@ require_once('../../server/authen.php');
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <th colspan="3" class="text-start">
-                                                            เวรเดือน {{cvg.ven_month_th}}
-                                                            <button class="btn btn-info btn-sm ms-2" @click="print_master(cvg.ven_month)">สรุปรายเดือน (รูป5)</button>
-                                                            <button class="btn btn-success btn-sm ms-2" @click="print_groups(cvg.ven_month)">แยกกลุ่มงาน</button>
-                                                            <button class="btn btn-outline-success btn-sm ms-2" @click="print_dutytype(cvg.ven_month)"><i class="bi bi-tags-fill me-1"></i>ตรวจสอบเวร</button>
-                                                                                                  <tbody v-for="vc in ven_coms">
+                                                        <th colspan="3" class="text-start py-3 bg-light">
+                                                            <div class="d-flex justify-content-between align-items-center px-2">
+                                                                <span class="fs-5 fw-bold text-dark">เวรประจำเดือน {{cvg.ven_month_th}}</span>
+                                                                <div>
+                                                                    <button class="btn btn-info btn-sm me-1 shadow-sm" @click="print_master(cvg.ven_month)">
+                                                                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>สรุปรายเดือน (รูป5)
+                                                                    </button>
+                                                                    <button class="btn btn-primary btn-sm me-1 shadow-sm" @click="print_warrant(cvg.ven_month)">
+                                                                        <i class="bi bi-calendar-check me-1"></i>ตารางคิวเวรหมายค้น-จับ
+                                                                    </button>
+                                                                    <button class="btn btn-secondary btn-sm me-1 shadow-sm" style="background-color: #6c5ce7; border-color: #6c5ce7;" @click="print_district_schedule(cvg.ven_month)">
+                                                                        <i class="bi bi-calendar-range-fill me-1"></i>ตารางคิวเวรแขวงฯ
+                                                                    </button>
+                                                                    <button class="btn btn-warning btn-sm me-1 shadow-sm text-white" @click="print_open_court_schedule(cvg.ven_month)">
+                                                                        <i class="bi bi-calendar-check-fill me-1"></i>ตารางคิวเวรเปิดทำการฯ
+                                                                    </button>
+                                                                    <button class="btn btn-outline-success btn-sm shadow-sm" @click="print_dutytype(cvg.ven_month)">
+                                                                        <i class="bi bi-tags-fill me-1"></i>ตรวจสอบเวร
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody v-for="vc in ven_coms" :key="vc.id">
                                                     <tr v-if="vc.ven_month == cvg.ven_month" class="report-row">
                                                         <td class="py-3">
                                                             <div class="d-flex align-items-start">
@@ -196,6 +215,7 @@ require_once('../../server/authen.php');
                                                                         <button v-if="vc.ven_name.includes('ศาลแขวง') || vc.ven_name.includes('เวรเปิดทำการ')" class="btn btn-soft-indigo btn-sm px-3 shadow-sm" @click="print5(vc.id, vc.ven_month)"><i class="bi bi-printer me-1"></i>เวรแขวง+เวรปล่อยฯ</button>
                                                                         <button v-if="vc.ven_name.includes('ศาลแขวง')" class="btn btn-soft-sage btn-sm px-3 shadow-sm" @click="print5_district(vc.id, vc.ven_month)"><i class="bi bi-house-door me-1"></i>เฉพาะเวรแขวงฯ</button>
                                                                         <button v-if="vc.ven_name.includes('เวรเปิดทำการ')" class="btn btn-soft-sand btn-sm px-3 shadow-sm" @click="print5_release(vc.id, vc.ven_month)"><i class="bi bi-unlock me-1"></i>เฉพาะเวรปล่อยฯ</button>
+                                                                        <button v-if="vc.ven_name.includes('เวรเปิดทำการ')" class="btn btn-warning btn-sm px-3 shadow-sm text-white" @click="print5_open_court(vc.id, vc.ven_month)"><i class="bi bi-file-earmark-text me-1"></i>เฉพาะเวรเปิดทำการฯ</button>
                                                                         <button v-if="vc.ven_name.includes('ฟื้นฟู') || vc.ven_name.includes('ตรวจสอบการจับ')" class="btn btn-soft-slate btn-sm px-3 shadow-sm" @click="print6(vc.id, vc.ven_month)"><i class="bi bi-shield-check me-1"></i>เวรฟื้นฟู/ตรวจสอบการจับ</button>
                                                                         <button v-if="vc.ven_name.includes('หมายจับ-ค้น')" class="btn btn-soft-sky btn-sm px-3 shadow-sm" @click="print7(vc.id, vc.ven_month)"><i class="bi bi-search me-1"></i>เวรหมายจับ-ค้น</button>
                                                                     </div>
@@ -240,7 +260,6 @@ require_once('../../server/authen.php');
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                </tbody>
                                                 </tbody>
                                                 <tfoot>
 
@@ -341,7 +360,6 @@ require_once('../../server/authen.php');
     <script src="../../assets/js/main.js"></script> -->
     <!--  -->
     <script src="../../node_modules/vue/dist/vue.global.js"></script>
-    <script src="../../node_modules/vue/dist/vue.global.prod.js"></script>
     <script src="../../node_modules/axios/dist/axios.js"></script>
     <script src="../../node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
     <script src="./js/report.js?v=<?= time() ?>"></script>

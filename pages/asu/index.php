@@ -31,7 +31,7 @@ require_once('../../server/authen.php');
                                     <div class="card-body">
                                         <h5 class="card-title">ผู้พิพากษา</h5>
                                         <ul class="list-group list-group-flush">
-                                            <li class="list-group-item font-monospace" >นายพเยาว์ สนพลาย ลบ</li>
+                                            <li class="list-group-item font-monospace" >............................................. ลบ</li>
                                             <li class="list-group-item" v-for="n in 10">{{ n }} A second item</li>
                                             <li class="list-group-item"><button class="btn btn-success">เพิ่ม</button></li>
                                         </ul>

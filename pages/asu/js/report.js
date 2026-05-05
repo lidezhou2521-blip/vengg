@@ -155,19 +155,64 @@ Vue.createApp({
           });
 
     }, 
-    print_groups(ven_month){
+    print_warrant(ven_month){
+      this.isLoading = true;
       axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
           .then(response => {
               if (response.data.status) {
                 var print = JSON.stringify(response.data);    
-                localStorage.setItem("print_groups",print);
-                window.open('./report-print-groups.php','_blank')
-              }else{
-                this.alert('warning',response.data.message,0)
+                localStorage.setItem("print_warrant", print);
+                window.open('./report-print-warrant.php', '_blank');
+              } else {
+                this.alert('warning', response.data.message, 0);
               } 
           })
           .catch(function (error) {
               console.log(error);
+              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
+          })
+          .finally(() => {
+            this.isLoading = false;
+          });
+    }, 
+    print_district_schedule(ven_month){
+      this.isLoading = true;
+      axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print_district_schedule", print);
+                window.open('./report-print-district.php', '_blank');
+              } else {
+                this.alert('warning', response.data.message, 0);
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
+          })
+          .finally(() => {
+            this.isLoading = false;
+          });
+    }, 
+    print_open_court_schedule(ven_month){
+      this.isLoading = true;
+      axios.post('../../server/asu/report/report_groups.php',{ven_month:ven_month})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print_open_court_schedule", print);
+                window.open('./report-print-open-court.php', '_blank');
+              } else {
+                this.alert('warning', response.data.message, 0);
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+              swal.fire('Error', 'ไม่สามารถดึงข้อมูลได้: ' + error.message, 'error');
+          })
+          .finally(() => {
+            this.isLoading = false;
           });
     }, 
     print_dutytype(ven_month){
@@ -220,6 +265,22 @@ Vue.createApp({
           });
     }, 
     print5_release(vcid, ven_month){
+      let excluded = this.getExcludedDuties(ven_month);
+      axios.post('../../server/asu/report/report5_release.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
+          .then(response => {
+              if (response.data.status) {
+                var print = JSON.stringify(response.data);    
+                localStorage.setItem("print5",print);
+                window.open('./report-print5.php?v=' + Date.now(), '_blank')
+              }else{
+                this.alert('warning',response.data.message,0)
+              } 
+          })
+          .catch(function (error) {
+              console.log(error);
+          });
+    }, 
+    print5_open_court(vcid, ven_month){
       let excluded = this.getExcludedDuties(ven_month);
       axios.post('../../server/asu/report/report5_release.php',{vcid:vcid, date_start: this.date_start, date_end: this.date_end, excluded_duties: excluded})    
           .then(response => {
