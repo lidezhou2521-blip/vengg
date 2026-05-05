@@ -159,7 +159,8 @@ require_once('../../server/authen.php');
               // ในตารางคิวเวรหมายจับ โดยปกติจะไม่เอาผู้พิพากษามารวมในรายการเจ้าหน้าที่
               if (groupName === 'ผู้พิพากษา') continue;
               
-              const groupUsers = this.datas.groups[groupName];
+              const groupData = this.datas.groups[groupName];
+              const groupUsers = groupData.users || {};
               let currentGroupUsers = [];
               if (Array.isArray(groupUsers)) {
                 currentGroupUsers = groupUsers;
@@ -169,10 +170,21 @@ require_once('../../server/authen.php');
               users = users.concat(currentGroupUsers);
             }
             
+            // Filter: only users who have at least one Warrant/Search duty
+            users = users.filter(u => {
+                if (!u.dates || !Array.isArray(u.dates)) return false;
+                return u.dates.some(d => {
+                    const dName = typeof d === 'object' ? (d.ven_name || '') : '';
+                    return dName.includes('หมายจับ') || dName.includes('หมายค้น');
+                });
+            });
+
+            // Sort: numerically by order, then by name
             return users.sort((a, b) => {
               const orderA = parseInt(a.order) || 999;
               const orderB = parseInt(b.order) || 999;
-              return orderA - orderB;
+              if (orderA !== orderB) return orderA - orderB;
+              return a.name.localeCompare(b.name, 'th');
             });
           }
         },

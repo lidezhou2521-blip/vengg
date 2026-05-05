@@ -188,31 +188,28 @@ require_once('../../server/authen.php');
           </tr>
         </thead>
         <tbody>
-          <template v-for="(group, gName, gIndex) in groupedUsers" :key="gName">
+          <template v-for="(group, gIndex) in groupedUsers" :key="group.name">
             <!-- Group Header Row -->
             <tr>
               <td class="col-no"></td>
-              <td class="group-header">{{getGroupLabel(gIndex + 1, gName)}}</td>
+              <td class="group-header">{{getGroupLabel(group.groupId || group.srt || (gIndex + 1), group.name)}}</td>
               <td v-for="d in filteredDates"></td>
               <td class="col-duty"></td>
               <td class="col-remark"></td>
             </tr>
             <!-- User Rows -->
-            <tr v-for="(u, uIndex) in group" :key="u.uid">
+            <tr v-for="(u, uIndex) in group.users" :key="u.uid">
               <td class="text-center">{{uIndex + 1}}</td>
               <td>{{u.name}}</td>
               <td v-for="d in filteredDates" :key="d.ven_date">
                 <span v-if="hasDuty(u.dates, d.ven_date)" class="tick">✓</span>
               </td>
               <!-- Responsibility spans all rows of group -->
-              <td v-if="uIndex === 0" :rowspan="group.length" class="col-duty">
-                {{getResponsibility(gName)}}
+              <td v-if="uIndex === 0" :rowspan="group.users.length" class="col-duty">
+                {{getResponsibility(group.name)}}
               </td>
-              <!-- Remark spans all rows or specific? Image shows per group or per person? 
-                                 Image shows per group for some, per person for others. 
-                                 Let's keep it per group for simplicity or leave blank. -->
-              <td v-if="uIndex === 0" :rowspan="group.length" class="col-remark">
-                {{getRemark(gName)}}
+              <td v-if="uIndex === 0" :rowspan="group.users.length" class="col-remark">
+                {{getRemark(group.name)}}
               </td>
             </tr>
           </template>
@@ -253,39 +250,37 @@ require_once('../../server/authen.php');
       },
       computed: {
         groupedUsers() {
-          if (!this.datas || !this.datas.groups) return {};
-          let result = {};
-          // จัดกลุ่มตามลำดับในภาพ
-          const order = ['หัวหน้ากลุ่ม', 'งานการเงิน', 'งานรับฟ้อง', 'งานผัดฟ้อง-ฝากขัง', 'งานประชาสัมพันธ์'];
-
+          if (!this.datas || !this.datas.groups) return [];
+          let result = [];
           // วนลูปตามกลุ่มที่มีในข้อมูล
+          const categories = ['หัวหน้ากลุ่ม', 'งานการเงิน', 'งานรับฟ้อง', 'งานผัดฟ้อง-ฝากขัง', 'งานประชาสัมพันธ์'];
+
           for (const gName in this.datas.groups) {
             if (gName === 'ผู้พิพากษา') continue;
+            
+            // แสดงเฉพาะกลุ่มงานที่เกี่ยวข้องกับรายงานนี้
+            if (!categories.some(key => gName.includes(key))) continue;
 
-            const users = Object.values(this.datas.groups[gName]).filter(u => {
-              // กรองเฉพาะคนที่มีเวร id 27
-              return u.dates && u.dates.some(d => d.vn_id == 27);
-            });
-
+            const groupData = this.datas.groups[gName];
+            const users = Object.values(groupData.users || {});
             if (users.length === 0) continue;
 
-            // หาคีย์ที่ใกล้เคียงที่สุดจาก responsibilities
-            let matchName = gName;
-            for (let key of order) {
-              if (gName.includes(key)) {
-                matchName = key;
-                break;
-              }
-            }
-
-            if (!result[matchName]) result[matchName] = [];
-            result[matchName] = result[matchName].concat(users);
+            result.push({
+                name: gName,
+                srt: parseInt(groupData.vns_srt) || 999,
+                groupId: groupData.vns_group_id, // Store Group_id
+                users: users
+            });
           }
 
-          // เรียงลำดับคนในกลุ่ม
-          for (let key in result) {
-            result[key].sort((a, b) => (parseInt(a.order) || 999) - (parseInt(b.order) || 999));
-          }
+          // เรียงลำดับกลุ่มตาม srt
+          result.sort((a, b) => a.srt - b.srt);
+
+          // เรียงลำดับคนในแต่ละกลุ่ม
+          result.forEach(group => {
+            group.users.sort((a, b) => (parseInt(a.order) || 999) - (parseInt(b.order) || 999));
+          });
+          
           return result;
         },
         filteredDates() {
@@ -293,9 +288,10 @@ require_once('../../server/authen.php');
           // กรองเฉพาะวันที่มีเวร id 27
           let activeDates = new Set();
           for (const groupName in this.datas.groups) {
-            const group = this.datas.groups[groupName];
-            for (const uid in group) {
-              const user = group[uid];
+            const groupData = this.datas.groups[groupName];
+            const groupUsers = groupData.users || {};
+            for (const uid in groupUsers) {
+              const user = groupUsers[uid];
               if (user.dates) {
                 user.dates.forEach(d => {
                   if (d.vn_id == 27) activeDates.add(d.date);
@@ -321,6 +317,8 @@ require_once('../../server/authen.php');
           return new Date(dateStr).getDate();
         },
         getGroupLabel(num, name) {
+          // If the name already contains "กลุ่มที่", use it as is
+          if (name.includes('กลุ่มที่')) return name;
           return `กลุ่มที่ ${num} ${name}`;
         },
         getResponsibility(gName) {

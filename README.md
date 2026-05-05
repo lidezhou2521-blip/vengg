@@ -2,7 +2,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
 [![MySQL](https://img.shields.io/badge/Database-MySQL%20/%20MariaDB-orange.svg)](https://www.mysql.com/)
 [![Vue.js](https://img.shields.io/badge/Frontend-Vue.js%203-green.svg)](https://vuejs.org/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-red.svg)](#)
+[![Version](https://img.shields.io/badge/Version-1.0.1-red.svg)](#)
 
 **Vengg** คือระบบบริหารจัดการการจัดเวรและรายงานเวรอัจฉริยะ (Judicial Duty Management System) พัฒนาขึ้นเพื่อยกระดับการทำงานของหน่วยงานศาลยุติธรรม ให้มีความแม่นยำ รวดเร็ว และตรวจสอบได้ง่ายขึ้น ครอบคลุมตั้งแต่การวางแผนจัดเวร การแลกเปลี่ยนเวร ไปจนถึงการตรวจสอบความถูกต้องก่อนการเบิกจ่าย
 
@@ -26,6 +26,8 @@
 - **Duty-Type Filtering**: พิมพ์รายงานสรุปเวรแยกตามประเภท เพื่อความสะดวกในการตรวจสอบงบประมาณ
 - **Responsive Tables**: ตารางรายงานที่รองรับการแสดงผลทุกหน้าจอ พร้อมเส้น Grid ที่ชัดเจนและรองรับการสั่งพิมพ์ (Print Friendly)
 - **Daily Rates Display**: แสดงอัตราค่าตอบแทนต่อเวรโดยละเอียดในหน้าตรวจสอบข้อมูล
+- **Dynamic Group Management**: ระบบจัดการกลุ่มหน้าที่แบบไดนามิก รองรับการกำหนดเลขกลุ่ม (Group ID) และลำดับการแสดงผล (SRT) ผ่านหน้าแอดมิน เพื่อความยืดหยุ่นในการจัดทำรายงาน
+- **Deterministic Sorting**: อัลกอริทึมการเรียงลำดับรายงานที่แม่นยำตามการตั้งค่าส่วนกลางของหน่วยงาน
 
 ### 4. การเชื่อมต่อภายนอก (Integration)
 - **🚀 LINE Messaging API**: ระบบแจ้งเตือนเวรรายวันและแจ้งเตือนการเปลี่ยนแปลงผ่าน LINE Messaging API ที่เสถียร รองรับการส่งข้อมูลเข้ากลุ่มและรายบุคคล

@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             isset($ven_name_sub->price) ?  $price = (int)$ven_name_sub->price   : array_push($errors,'price'); 
             isset($ven_name_sub->color) ?  $color = $ven_name_sub->color        : array_push($errors,'color'); 
             isset($ven_name_sub->srt)   ?  $srt = (int)$ven_name_sub->srt       : array_push($errors,'ลำดับ'); 
+            isset($ven_name_sub->Group_id) ? $Group_id = (int)$ven_name_sub->Group_id : $Group_id = 0; 
             
             if(count($errors)>0){
                 http_response_code(200);
@@ -34,14 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $sql = "INSERT INTO ven_name_sub(name, ven_name_id, price, color, srt) 
-                    VALUE(:name, :ven_name_id, :price, :color, :srt);";        
+            $sql = "INSERT INTO ven_name_sub(name, ven_name_id, price, color, srt, Group_id) 
+                    VALUE(:name, :ven_name_id, :price, :color, :srt, :Group_id);";        
             $query = $conn->prepare($sql);
             $query->bindParam(':name', $name, PDO::PARAM_STR);
             $query->bindParam(':ven_name_id', $ven_name_id, PDO::PARAM_INT);
             $query->bindParam(':price', $price, PDO::PARAM_INT);
             $query->bindParam(':color', $color, PDO::PARAM_STR);
             $query->bindParam(':srt', $srt, PDO::PARAM_INT);
+            $query->bindParam(':Group_id', $Group_id, PDO::PARAM_INT);
             $query->execute();
 
             http_response_code(200);
@@ -63,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             isset($ven_name_sub->price) ?  $price = (int)$ven_name_sub->price   : array_push($errors,'price'); 
             isset($ven_name_sub->color) ?  $color = $ven_name_sub->color        : array_push($errors,'color'); 
             isset($ven_name_sub->srt)   ?  $srt = (int)$ven_name_sub->srt       : array_push($errors,'ลำดับ'); 
+            isset($ven_name_sub->Group_id) ? $Group_id = (int)$ven_name_sub->Group_id : $Group_id = 0; 
             
             if(count($errors)>0){
                 http_response_code(200);
@@ -70,13 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $sql = "UPDATE ven_name_sub SET name =:name, price=:price, color=:color, srt=:srt WHERE id = :id";   
+            $sql = "UPDATE ven_name_sub SET name =:name, price=:price, color=:color, srt=:srt, Group_id=:Group_id WHERE id = :id";   
 
             $query = $conn->prepare($sql);
             $query->bindParam(':name',$name, PDO::PARAM_STR);
             $query->bindParam(':price',$price, PDO::PARAM_INT);
             $query->bindParam(':color',$color, PDO::PARAM_STR);
             $query->bindParam(':srt',$srt, PDO::PARAM_INT);
+            $query->bindParam(':Group_id',$Group_id, PDO::PARAM_INT);
             $query->bindParam(':id',$id, PDO::PARAM_INT);
             $query->execute();     
 

@@ -79,28 +79,55 @@ require_once('../../server/authen.php');
 
   .duty-group-body .members-wrap {
     display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .duty-group-body .member-item {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    margin: 0;
-    background: #f8fafc;
-    border-radius: 20px;
-    font-size: 0.82rem;
+    gap: 6px;
+    padding: 6px 10px;
+    margin: 4px 0;
+    background: #ffffff;
+    border-radius: 12px;
+    font-size: 0.85rem;
     border: 1px solid #e2e8f0;
-    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    width: 100%;
+    transition: all 0.2s;
   }
 
-  .duty-group-body .member-item .btn-sm {
-    padding: 0 4px;
-    font-size: 0.68rem;
+  .duty-group-body .member-item:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+
+  .duty-group-body .member-item .btn-group .btn {
+    padding: 2px 4px;
+    font-size: 0.7rem;
     line-height: 1;
-    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #64748b;
+  }
+
+  .duty-group-body .member-item .btn-group .btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .duty-group-body .member-item .btn-group .btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .duty-group-body .member-item .btn-group .btn-outline-danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
   }
 
   .duty-group-body .member-item[draggable="true"] {
@@ -221,9 +248,17 @@ require_once('../../server/authen.php');
                                              @drop.stop="onMemberDrop($event, index, mi)">
                                             <i class="bi bi-grip-vertical opacity-40" style="cursor:grab"></i>
                                             <span>{{u.order}}. {{u.name}}</span>
-                                            <button class="btn btn-outline-danger btn-sm" @click="vu_del(u.vu_id)">
-                                                <i class="bi bi-x"></i>
-                                            </button>
+                                            <div class="btn-group btn-group-sm ms-auto">
+                                                <button class="btn btn-outline-secondary py-0 px-1" @click="moveOrder(index, mi, -1)" :disabled="mi === 0">
+                                                    <i class="bi bi-chevron-up"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary py-0 px-1" @click="moveOrder(index, mi, 1)" :disabled="mi === data.users.length - 1">
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger py-0 px-1" @click="vu_del(u.vu_id)">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 

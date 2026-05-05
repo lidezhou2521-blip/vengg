@@ -128,6 +128,20 @@ Vue.createApp({
       
       const fromIdx = this.reorder_from_index;
       const toIdx = memberIndex;
+      this.executeReorder(dataIndex, fromIdx, toIdx);
+    },
+
+    moveOrder(dataIndex, memberIndex, direction) {
+      const fromIdx = memberIndex;
+      const toIdx = memberIndex + direction;
+      
+      const data = this.datas[dataIndex];
+      if (toIdx < 0 || toIdx >= data.users.length) return;
+
+      this.executeReorder(dataIndex, fromIdx, toIdx);
+    },
+
+    executeReorder(dataIndex, fromIdx, toIdx) {
       if (fromIdx === toIdx) return;
 
       const data = this.datas[dataIndex];

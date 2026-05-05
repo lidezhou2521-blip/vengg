@@ -9,7 +9,7 @@ Vue.createApp({
       },
       ven_name_form_act:'insert',
       ven_name_subs   :'',
-      ven_name_sub_form : {srt:0, name : '', price:0, color:'BlueViolet'},
+      ven_name_sub_form : {srt:0, name : '', price:0, color:'BlueViolet', Group_id: 0},
       ven_name_sf_act:'insert',
       isLoading : false,
       colors:['BlueViolet','Blue','goldenrod','Green','cadetblue','Magenta','Violet','red','YellowGreen','Brown','Chocolate','DarkBlue','DarkCyan','Maroon']
@@ -170,7 +170,7 @@ Vue.createApp({
       })      
     },
     clear_vnsf(){
-      this.ven_name_sub_form = {srt:0, name : '', price:0, color:'BlueViolet', act:'insert'}
+      this.ven_name_sub_form = {srt:0, name : '', price:0, color:'BlueViolet', Group_id: 0, act:'insert'}
     },
     ven_name_update_show_form(id){
       this.ven_name_form_act = 'update'

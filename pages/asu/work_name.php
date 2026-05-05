@@ -183,6 +183,10 @@ require_once('../../server/authen.php');
                                                 <option v-for="color in colors" :value="color" :style="'background-color:'+color+'; color:white;'">{{color}}</option>
                                             </select>
                                         </div>
+                                        <div class="col">
+                                            <label for="group_id" class="form-label">Group ID</label>
+                                            <input type="number" min="0" max="99" class="form-control" id="group_id" v-model="ven_name_sub_form.Group_id">
+                                        </div>
                                     </div>
                                     <div class="pull-end">
                                         
